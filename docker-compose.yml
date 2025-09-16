@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  transactions-postgresql:
+    image: postgres:15-alpine
+    container_name: transactions-postgres
+    environment:
+      POSTGRES_DB: transactions_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: transactions_pass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - transactions_postgres_data:/var/lib/postgresql/data
+      #- ./src/main/resources/db/migration:/docker-entrypoint-initdb.d/
+    networks:
+      - transactions-network
+    restart: unless-stopped
+
+  transactions-adminer:
+    image: adminer:4.8.1
+    container_name: transactions-adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: transactions-postgresql
+      ADMINER_DESIGN: pepa-linha
+    networks:
+      - transactions-network
+    depends_on:
+      - transactions-postgresql
+    restart: unless-stopped
+
+volumes:
+  transactions_postgres_data:
+
+networks:
+  transactions-network:
+    driver: bridge 

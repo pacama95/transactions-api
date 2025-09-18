@@ -44,6 +44,9 @@ dependencies {
     // Kafka
     implementation 'io.quarkus:quarkus-messaging-kafka'
 
+    // Redis
+    implementation 'io.quarkus:quarkus-redis-client'
+
     // MapStruct dependencies
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'

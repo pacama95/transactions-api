@@ -8,6 +8,8 @@ public interface Errors {
         Error INVALID_INPUT = new Error(errorCode + "01");
         Error NOT_FOUND = new Error(errorCode + "02");
         Error PERSISTENCE_ERROR = new Error(errorCode + "03");
+        Error PUBLISH_DOMAIN_EVENT_ERROR = new Error(errorCode + "04");
+        Error GENERAL_ERROR = new Error(errorCode + "05");
     }
 
     interface DeleteTransaction {

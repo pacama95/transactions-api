@@ -14,6 +14,7 @@ import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 
 /**
@@ -21,6 +22,7 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
  * This adapter publishes domain events to Kafka topics following hexagonal architecture principles.
  */
 @ApplicationScoped
+@Named("kafkaProducer")
 public class KafkaProducer implements EventPublisher<DomainEvent<Transaction>> {
 
     private final MutinyEmitter<Message<TransactionCreatedData>> transactionEmitter;

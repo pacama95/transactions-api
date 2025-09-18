@@ -1,5 +1,7 @@
 package com.transaction.infrastructure.persistence.adapter;
 
+import com.transaction.domain.exception.Errors;
+import com.transaction.domain.exception.ServiceException;
 import com.transaction.domain.model.Transaction;
 import com.transaction.domain.model.TransactionType;
 import com.transaction.domain.port.output.TransactionRepository;
@@ -32,13 +34,15 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
         return Uni.createFrom().item(() -> transactionEntityMapper.toEntity(transaction))
                 .flatMap(panacheRepository::persistAndFlush)
                 .map(transactionEntity ->
-                        transactionEntityMapper.toDomain(transactionEntity, transaction.getDomainEvents()));
+                        transactionEntityMapper.toDomain(transactionEntity, transaction.getDomainEvents()))
+                .onFailure().transform(throwable -> new ServiceException(Errors.CreateTransaction.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Transaction> findById(UUID id) {
         return panacheRepository.findById(id)
-                .map(transactionEntityMapper::toDomain);
+                .map(transactionEntityMapper::toDomain)
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
@@ -46,7 +50,8 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
         return panacheRepository.findByTicker(ticker)
                 .map(entities -> entities.stream()
                         .map(transactionEntityMapper::toDomain)
-                        .toList());
+                        .toList())
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
@@ -54,7 +59,8 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
         return panacheRepository.findAllOrderedByDate()
                 .map(entities -> entities.stream()
                         .map(transactionEntityMapper::toDomain)
-                        .toList());
+                        .toList())
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
@@ -65,7 +71,8 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
         return panacheRepository.searchTransactions(ticker, type, fromDate, toDate)
                 .map(entities -> entities.stream()
                         .map(transactionEntityMapper::toDomain)
-                        .toList());
+                        .toList())
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
@@ -75,27 +82,32 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                         panacheRepository.getSession().flatMap(session -> session.merge(transactionEntity)))
                 .flatMap(panacheRepository::persistAndFlush)
                 .map(transactionEntity ->
-                        transactionEntityMapper.toDomain(transactionEntity, transaction.popEvents()));
+                        transactionEntityMapper.toDomain(transactionEntity, transaction.popEvents()))
+                .onFailure().transform(throwable -> new ServiceException(Errors.UpdateTransaction.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Boolean> deleteById(UUID id) {
-        return panacheRepository.deleteById(id);
+        return panacheRepository.deleteById(id)
+                .onFailure().transform(throwable -> new ServiceException(Errors.DeleteTransaction.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Boolean> existsById(UUID id) {
         return panacheRepository.findByIdActive(id)
-                .map(Objects::nonNull);
+                .map(Objects::nonNull)
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Long> countAll() {
-        return panacheRepository.count();
+        return panacheRepository.count()
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Long> countByTicker(String ticker) {
-        return panacheRepository.countByTicker(ticker);
+        return panacheRepository.countByTicker(ticker)
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
     }
 } 

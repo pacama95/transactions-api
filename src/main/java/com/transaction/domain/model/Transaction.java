@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Getter
-@AllArgsConstructor(onConstructor = @__({@Default}))
+@AllArgsConstructor
 public class Transaction {
     private final UUID id;
     private String ticker;
@@ -44,6 +44,35 @@ public class Transaction {
                        BigDecimal fractionalMultiplier,
                        Currency commissionCurrency) {
         this.id = null;
+        this.ticker = ticker;
+        this.transactionType = transactionType;
+        this.quantity = quantity;
+        this.price = price;
+        this.fees = fees;
+        this.currency = currency;
+        this.transactionDate = transactionDate;
+        this.notes = notes;
+        this.isActive = isActive;
+        this.isFractional = isFractional;
+        this.fractionalMultiplier = fractionalMultiplier;
+        this.commissionCurrency = commissionCurrency;
+    }
+
+    @Default
+    public Transaction(UUID id,
+                       String ticker,
+                       TransactionType transactionType,
+                       BigDecimal quantity,
+                       BigDecimal price,
+                       BigDecimal fees,
+                       Currency currency,
+                       LocalDate transactionDate,
+                       String notes,
+                       Boolean isActive,
+                       Boolean isFractional,
+                       BigDecimal fractionalMultiplier,
+                       Currency commissionCurrency) {
+        this.id = id;
         this.ticker = ticker;
         this.transactionType = transactionType;
         this.quantity = quantity;
@@ -93,11 +122,11 @@ public class Transaction {
 
         this.domainEvents.add(new TransactionUpdatedEvent(this));
     }
-    
+
     public List<DomainEvent<?>> getDomainEvents() {
         return Collections.unmodifiableList(domainEvents);
     }
-    
+
     public List<DomainEvent<?>> popEvents() {
         // Create a copy of events BEFORE clearing, since getDomainEvents() returns an unmodifiable view
         // of the same list that gets cleared

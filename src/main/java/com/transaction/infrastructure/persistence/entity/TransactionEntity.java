@@ -4,7 +4,10 @@ import com.transaction.domain.model.Currency;
 import com.transaction.domain.model.Default;
 import com.transaction.domain.model.TransactionType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,18 +18,17 @@ import java.util.UUID;
 @Getter
 @Entity
 @Table(
-    name = "transactions",
-    indexes = {
-        @Index(name = "idx_transactions_ticker", columnList = "ticker"),
-        @Index(name = "idx_transactions_date", columnList = "transaction_date"),
-        @Index(name = "idx_transactions_ticker_date", columnList = "ticker,transaction_date")
-    }
+        name = "transactions",
+        indexes = {
+                @Index(name = "idx_transactions_ticker", columnList = "ticker"),
+                @Index(name = "idx_transactions_date", columnList = "transaction_date"),
+                @Index(name = "idx_transactions_ticker_date", columnList = "ticker,transaction_date")
+        }
 )
 @NoArgsConstructor(force = true)
 @AllArgsConstructor(onConstructor = @__({@Default}))
 public class TransactionEntity {
 
-    // Getters and setters
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")

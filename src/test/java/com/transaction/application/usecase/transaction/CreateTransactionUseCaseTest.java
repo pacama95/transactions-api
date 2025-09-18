@@ -19,21 +19,12 @@ import org.mockito.ArgumentCaptor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Unit test for CreateTransactionUseCase.
- * 
- * Tests both transaction persistence and domain event publishing following
- * the user's preferences for explicit mocking and UniAssertSubscriber usage.
- */
 class CreateTransactionUseCaseTest {
     private TransactionRepository transactionRepository;
     private EventPublisher<DomainEvent<Transaction>> eventPublisher;
@@ -53,15 +44,13 @@ class CreateTransactionUseCaseTest {
         // Given
         CreateTransactionCommand command = createValidCommand();
         UUID transactionId = UUID.randomUUID();
-        
+
         // Mock repository to return the same transaction but with an ID (simulating save)
-        // The key insight: return the input transaction but with an ID assigned
-        // This preserves the original domain events that were generated
         when(transactionRepository.save(any(Transaction.class)))
                 .thenAnswer(invocation -> {
                     Transaction inputTransaction = invocation.getArgument(0);
                     // Repository mock preserves domain events for testing
-                    
+
                     // Create a new transaction that simulates having an ID assigned by the database
                     // while preserving the original domain events
                     Transaction savedTransaction = new Transaction(
@@ -150,7 +139,7 @@ class CreateTransactionUseCaseTest {
         // Verify that the event publisher was called with the correct event type
         ArgumentCaptor<DomainEvent<Transaction>> eventCaptor = ArgumentCaptor.forClass(DomainEvent.class);
         verify(eventPublisher).publish(eventCaptor.capture());
-        
+
         DomainEvent<Transaction> publishedEvent = eventCaptor.getValue();
         assertInstanceOf(TransactionCreatedEvent.class, publishedEvent);
         // The event contains the original transaction from command.toTransaction()
@@ -162,7 +151,7 @@ class CreateTransactionUseCaseTest {
     void testExecuteRepositoryFailure() {
         // Given
         CreateTransactionCommand command = createValidCommand();
-        RuntimeException exception = new RuntimeException("Database error");
+        ServiceException exception = new ServiceException(Errors.CreateTransaction.PERSISTENCE_ERROR);
 
         when(transactionRepository.save(any(Transaction.class)))
                 .thenReturn(Uni.createFrom().failure(exception));
@@ -223,7 +212,7 @@ class CreateTransactionUseCaseTest {
                 .assertFailedWith(ServiceException.class)
                 .getFailure();
 
-        assertEquals(Errors.CreateTransaction.PERSISTENCE_ERROR, ((ServiceException) failure).getError());
+        assertEquals(Errors.CreateTransaction.PUBLISH_DOMAIN_EVENT_ERROR, ((ServiceException) failure).getError());
 
         verify(transactionRepository).save(any(Transaction.class));
         verify(eventPublisher).publish(any(DomainEvent.class));
@@ -234,7 +223,7 @@ class CreateTransactionUseCaseTest {
         // Given
         CreateTransactionCommand command = createValidCommand();
         UUID transactionId = UUID.randomUUID();
-        
+
         // Create transaction without domain events
         Transaction savedTransaction = new Transaction(
                 transactionId,

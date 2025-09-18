@@ -18,7 +18,6 @@ public interface TransactionEntityMapper {
 
     @Mapping(target = "price", source = "costPerShare")
     @Mapping(target = "fees", source = "commission")
-    @Mapping(target = "domainEvents", expression = "java(new ArrayList<DomainEvent<?>>())")
     Transaction toDomain(TransactionEntity entity);
 
     @Mapping(target = "price", source = "entity.costPerShare")

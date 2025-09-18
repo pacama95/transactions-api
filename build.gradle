@@ -42,7 +42,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-cache'
 
     // Kafka
-    implementation 'io.quarkus:quarkus-messaging-kafka'
+    //implementation 'io.quarkus:quarkus-messaging-kafka'
 
     // Redis
     implementation 'io.quarkus:quarkus-redis-client'

@@ -1,6 +1,7 @@
 package com.transaction.domain.model;
 
 import com.transaction.domain.event.DomainEvent;
+import com.transaction.domain.event.TransactionCreatedEvent;
 import com.transaction.domain.event.TransactionUpdatedEvent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -63,6 +64,7 @@ public class Transaction {
         this.exchange = exchange;
         this.country = country;
         this.domainEvents = new ArrayList<>();
+        this.domainEvents.add(new TransactionCreatedEvent(this));
     }
 
     public Transaction(String ticker,

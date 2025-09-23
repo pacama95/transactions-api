@@ -41,7 +41,11 @@ public record TransactionResponse(
         @Schema(description = "Multiplier for fractional shares")
         BigDecimal fractionalMultiplier,
         @Schema(description = "Currency for commission fees")
-        Currency commissionCurrency
+        Currency commissionCurrency,
+        @Schema(description = "Stock exchange", example = "NYSE")
+        String exchange,
+        @Schema(description = "Country of the stock", example = "USA")
+        String country
 ) {
 
     public TransactionResponse {

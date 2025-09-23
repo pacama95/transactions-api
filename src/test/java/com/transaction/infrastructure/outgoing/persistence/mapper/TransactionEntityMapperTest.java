@@ -14,7 +14,6 @@ import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -31,7 +30,7 @@ class TransactionEntityMapperTest {
     @Test
     void testToEntityFullMapping() {
         UUID id = UUID.randomUUID();
-        Transaction transaction = new Transaction(
+        Transaction transaction = Transaction.create(
                 id,
                 "AAPL",
                 TransactionType.BUY,
@@ -45,7 +44,8 @@ class TransactionEntityMapperTest {
                 false,
                 BigDecimal.ONE,
                 Currency.USD,
-                Collections.emptyList()
+                "NYSE",
+                "USA"
         );
 
         TransactionEntity entity = mapper.toEntity(transaction);
@@ -80,7 +80,7 @@ class TransactionEntityMapperTest {
                 null,
                 null,
                 null,
-                Collections.emptyList()
+                null
         );
         TransactionEntity entity = mapper.toEntity(transaction);
         assertNotNull(entity);
@@ -153,10 +153,10 @@ class TransactionEntityMapperTest {
 
     static Stream<Arguments> provideTransactionEntityMappingTestCases() {
         UUID id1 = UUID.randomUUID();
-        Transaction transaction1 = new Transaction(
+        Transaction transaction1 = Transaction.create(
                 id1, "TSLA", TransactionType.BUY, new BigDecimal("5.0"), new BigDecimal("250.0"),
                 new BigDecimal("1.0"), Currency.EUR, LocalDate.of(2024, 3, 1), "Buy Tesla",
-                true, true, new BigDecimal("2.0"), Currency.GBP, Collections.emptyList()
+                true, true, new BigDecimal("2.0"), Currency.GBP, "LSE", "UK"
         );
         TransactionEntity expectedEntity1 = new TransactionEntity();
         expectedEntity1.setId(id1);
@@ -173,10 +173,10 @@ class TransactionEntityMapperTest {
         expectedEntity1.setFractionalMultiplier(new BigDecimal("2.0"));
 
         UUID id2 = UUID.randomUUID();
-        Transaction transaction2 = new Transaction(
+        Transaction transaction2 = Transaction.create(
                 id2, "GOOGL", TransactionType.SELL, new BigDecimal("1.5"), new BigDecimal("3000.0"),
                 new BigDecimal("15.0"), Currency.USD, LocalDate.of(2024, 4, 15), "Sell Google",
-                true, false, BigDecimal.ONE, null, Collections.emptyList()
+                true, false, BigDecimal.ONE, null, "NASDAQ", "USA"
         );
         TransactionEntity expectedEntity2 = new TransactionEntity();
         expectedEntity2.setId(id2);

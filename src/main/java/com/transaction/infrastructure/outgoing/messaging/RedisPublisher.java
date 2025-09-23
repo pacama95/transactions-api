@@ -36,9 +36,6 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
     // Redis stream names
     private static final String TRANSACTION_CREATED_STREAM = "transaction:created";
     private static final String TRANSACTION_UPDATED_STREAM = "transaction:updated";
-    
-    // Stream management
-    private static final long MAX_STREAM_LENGTH = 10000L; // Keep last 10k events
 
     public RedisPublisher(ReactiveRedisDataSource redisDataSource,
                           TransactionMessageMapper mapper,
@@ -55,7 +52,7 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
             case TransactionUpdatedEvent event -> publishTransactionUpdated(event);
             default -> Uni.createFrom().failure(
                     new ServiceException(
-                            Errors.PublishTransaction.PUBLISH_ERROR,
+                            Errors.PublishTransactionsErrors.PUBLISH_ERROR,
                             new IllegalArgumentException("Unsupported event type: " + domainEvent.getClass().getSimpleName())
                     )
             );
@@ -78,7 +75,7 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
                             "messageCreatedAt", message.messageCreatedAt().toString(),
                             "payload", serializedMessage
                     );
-                    
+
                     return streamCommands.xadd(TRANSACTION_CREATED_STREAM, streamData)
                             .onItem().invoke(messageId ->
                                     Log.info("Published transaction created event with ID %s and eventId %s to Redis stream %s with messageId %s"
@@ -90,11 +87,11 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
                                             )))
                             .replaceWithVoid();
                 })
-                .onFailure().invoke(throwable -> 
-                    Log.error("Failed to publish transaction created event with ID %s and eventId %s to Redis stream"
-                            .formatted(message.payload().id(), message.eventId()), throwable))
-                .onFailure().transform(throwable -> 
-                    new ServiceException(Errors.PublishTransaction.PUBLISH_ERROR, throwable));
+                .onFailure().invoke(throwable ->
+                        Log.error("Failed to publish transaction created event with ID %s and eventId %s to Redis stream"
+                                .formatted(message.payload().id(), message.eventId()), throwable))
+                .onFailure().transform(throwable ->
+                        new ServiceException(Errors.PublishTransactionsErrors.PUBLISH_ERROR, throwable));
     }
 
     /**
@@ -117,7 +114,7 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
                             "messageCreatedAt", message.messageCreatedAt().toString(),
                             "payload", serializedMessage
                     );
-                    
+
                     return streamCommands.xadd(TRANSACTION_UPDATED_STREAM, streamData)
                             .onItem().invoke(messageId ->
                                     Log.info("Published transaction updated event with ID %s and eventId %s to Redis stream %s with messageId %s"
@@ -129,11 +126,11 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
                                             )))
                             .replaceWithVoid();
                 })
-                .onFailure().invoke(throwable -> 
-                    Log.error("Failed to publish transaction updated event with ID %s and eventId %s to Redis stream"
-                            .formatted(message.payload().id(), message.eventId()), throwable))
-                .onFailure().transform(throwable -> 
-                    new ServiceException(Errors.PublishTransaction.PUBLISH_ERROR, throwable));
+                .onFailure().invoke(throwable ->
+                        Log.error("Failed to publish transaction updated event with ID %s and eventId %s to Redis stream"
+                                .formatted(message.payload().id(), message.eventId()), throwable))
+                .onFailure().transform(throwable ->
+                        new ServiceException(Errors.PublishTransactionsErrors.PUBLISH_ERROR, throwable));
     }
 
     /**
@@ -144,7 +141,7 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
             try {
                 return objectMapper.writeValueAsString(message);
             } catch (JsonProcessingException e) {
-                throw new ServiceException(Errors.PublishTransaction.PUBLISH_ERROR,
+                throw new ServiceException(Errors.PublishTransactionsErrors.PUBLISH_ERROR,
                         new RuntimeException("Failed to serialize message to JSON", e));
             }
         });

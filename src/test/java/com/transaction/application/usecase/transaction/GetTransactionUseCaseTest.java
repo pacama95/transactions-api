@@ -437,7 +437,7 @@ class GetTransactionUseCaseTest {
     }
 
     private Transaction createTransaction(UUID id, String ticker) {
-        return new Transaction(
+        return Transaction.create(
                 id,
                 ticker,
                 TransactionType.BUY,
@@ -451,28 +451,29 @@ class GetTransactionUseCaseTest {
                 false,
                 BigDecimal.ONE,
                 null,
-                Collections.emptyList()
+                "NYSE",
+                "USA"
         );
     }
 
     private Transaction createActiveTransaction(UUID id, String ticker) {
         Transaction base = createTransaction(id, ticker);
-        return new Transaction(base.getId(), base.getTicker(), base.getTransactionType(), base.getQuantity(),
+        return Transaction.create(base.getId(), base.getTicker(), base.getTransactionType(), base.getQuantity(),
                 base.getPrice(), base.getFees(), base.getCurrency(), base.getTransactionDate(),
                 base.getNotes(), true, base.getIsFractional(), base.getFractionalMultiplier(),
-                base.getCommissionCurrency(), Collections.emptyList());
+                base.getCommissionCurrency(), "NYSE", "USA");
     }
 
     private Transaction createInactiveTransaction(UUID id, String ticker) {
         Transaction base = createTransaction(id, ticker);
-        return new Transaction(base.getId(), base.getTicker(), base.getTransactionType(), base.getQuantity(),
+        return Transaction.create(base.getId(), base.getTicker(), base.getTransactionType(), base.getQuantity(),
                 base.getPrice(), base.getFees(), base.getCurrency(), base.getTransactionDate(),
                 base.getNotes(), false, base.getIsFractional(), base.getFractionalMultiplier(),
-                base.getCommissionCurrency(), Collections.emptyList());
+                base.getCommissionCurrency(), "NYSE", "USA");
     }
 
     private Transaction createTransactionWithType(UUID id, String ticker, TransactionType type) {
-        return new Transaction(
+        return Transaction.create(
                 id,
                 ticker,
                 type,
@@ -486,7 +487,8 @@ class GetTransactionUseCaseTest {
                 false,
                 BigDecimal.ONE,
                 null,
-                Collections.emptyList()
+                "NYSE",
+                "USA"
         );
     }
 }

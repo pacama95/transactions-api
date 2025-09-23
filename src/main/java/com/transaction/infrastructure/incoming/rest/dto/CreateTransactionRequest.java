@@ -25,16 +25,16 @@ public record CreateTransactionRequest(
         TransactionType transactionType,
 
         @NotNull(message = "Quantity is required")
-        @DecimalMin(value = "0.0001", inclusive = true, message = "Quantity must be positive")
+        @DecimalMin(value = "0.0001", message = "Quantity must be positive")
         @Schema(description = "Number of shares", example = "100.00", required = true)
         BigDecimal quantity,
 
         @NotNull(message = "Price is required")
-        @DecimalMin(value = "0.01", inclusive = true, message = "Price must be positive")
+        @DecimalMin(value = "0.01", message = "Price must be positive")
         @Schema(description = "Price per share", example = "150.25", required = true)
         BigDecimal price,
 
-        @DecimalMin(value = "0.0", inclusive = true, message = "Fees cannot be negative")
+        @DecimalMin(value = "0.0", message = "Fees cannot be negative")
         @Schema(description = "Transaction fees", example = "9.99", defaultValue = "0.0")
         BigDecimal fees,
 
@@ -56,7 +56,15 @@ public record CreateTransactionRequest(
         @Schema(description = "Multiplier for fractional shares", defaultValue = "1.0")
         BigDecimal fractionalMultiplier,
         @Schema(description = "Currency for commission fees")
-        Currency commissionCurrency
+        Currency commissionCurrency,
+        @NotNull(message = "Exchange is required")
+        @Size(min = 1, max = 20, message = "Exchange must be between 1 and 20 characters")
+        @Schema(description = "Stock exchange", example = "NYSE", required = true)
+        String exchange,
+        @NotNull(message = "Country is required")
+        @Size(min = 2, max = 50, message = "Country must be between 2 and 50 characters")
+        @Schema(description = "Country of the stock", example = "USA", required = true)
+        String country
 ) {
 
     public CreateTransactionRequest {
@@ -69,25 +77,5 @@ public record CreateTransactionRequest(
         if (fractionalMultiplier == null) {
             fractionalMultiplier = BigDecimal.ONE;
         }
-    }
-
-    public CreateTransactionRequest(String ticker,
-                                    TransactionType transactionType,
-                                    BigDecimal quantity,
-                                    BigDecimal price,
-                                    Currency currency,
-                                    LocalDate transactionDate) {
-        this(
-                ticker,
-                transactionType,
-                quantity,
-                price,
-                BigDecimal.ZERO,
-                currency,
-                transactionDate,
-                null,
-                false,
-                BigDecimal.ONE,
-                null);
     }
 } 

@@ -11,7 +11,6 @@ import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,7 +21,7 @@ class TransactionMapperTest {
     @Test
     void testToResponse_normalizesFields() {
         UUID id = UUID.randomUUID();
-        Transaction tx = new Transaction(
+        Transaction tx = Transaction.create(
                 id,
                 "AAPL",
                 TransactionType.BUY,
@@ -36,7 +35,8 @@ class TransactionMapperTest {
                 false,
                 new BigDecimal("1.234567"),
                 Currency.USD,
-                Collections.emptyList()
+                "NYSE",
+                "USA"
         );
 
         TransactionResponse resp = mapper.toResponse(tx);
@@ -61,7 +61,9 @@ class TransactionMapperTest {
                 "Update test notes",
                 true,
                 new BigDecimal("0.333333333"),
-                Currency.GBP
+                Currency.GBP,
+                "NASDAQ",
+                "USA"
         );
 
         UpdateTransactionCommand command = mapper.toUpdateTransactionCommand(transactionId, req);

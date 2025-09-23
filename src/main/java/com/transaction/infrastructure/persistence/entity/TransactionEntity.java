@@ -61,6 +61,12 @@ public class TransactionEntity {
     @Column(name = "commission_currency", columnDefinition = "currency_type")
     private Currency commissionCurrency;
 
+    @Column(name = "exchange", length = 20)
+    private String exchange;
+
+    @Column(name = "country", length = 50)
+    private String country;
+
     @Column(name = "drip_confirmed")
     private Boolean dripConfirmed = false;
 

@@ -41,14 +41,14 @@ class TransactionRepositoryAdapterTest {
         when(transactionEntityMapper.toEntity(transaction)).thenReturn(entity);
         when(panacheRepository.persistAndFlush(entity)).thenReturn(Uni.createFrom().item(entity));
         when(transaction.getDomainEvents()).thenReturn(domainEvents);
-        when(transactionEntityMapper.toDomain(entity, domainEvents)).thenReturn(transaction);
+        when(transactionEntityMapper.createTransaction(entity)).thenReturn(transaction);
 
         Uni<Transaction> uni = adapter.save(transaction);
         Transaction result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
 
         assertEquals(transaction, result);
         verify(transactionEntityMapper).toEntity(transaction);
-        verify(transactionEntityMapper).toDomain(entity, domainEvents);
+        verify(transactionEntityMapper).createTransaction(entity);
     }
 
     @Test
@@ -143,7 +143,7 @@ class TransactionRepositoryAdapterTest {
         when(session.merge(entity)).thenReturn(Uni.createFrom().item(mergedEntity));
         when(panacheRepository.persistAndFlush(mergedEntity)).thenReturn(Uni.createFrom().item(mergedEntity));
         when(transaction.popEvents()).thenReturn(domainEvents);
-        when(transactionEntityMapper.toDomain(mergedEntity, domainEvents)).thenReturn(transaction);
+        when(transactionEntityMapper.toDomain(mergedEntity)).thenReturn(transaction);
 
         Uni<Transaction> uni = adapter.update(transaction);
         Transaction result = uni.subscribe()
@@ -153,7 +153,7 @@ class TransactionRepositoryAdapterTest {
 
         assertEquals(transaction, result);
         verify(transactionEntityMapper).toEntity(transaction);
-        verify(transactionEntityMapper).toDomain(mergedEntity, domainEvents);
+        verify(transactionEntityMapper).toDomain(mergedEntity);
         verify(panacheRepository).persistAndFlush(mergedEntity);
     }
 

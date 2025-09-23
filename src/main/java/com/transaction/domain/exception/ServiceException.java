@@ -3,6 +3,7 @@ package com.transaction.domain.exception;
 public class ServiceException extends RuntimeException {
     private final Error error;
 
+    // Constructor for CreateTransaction errors
     public ServiceException(Error error) {
         super(error.code());
         this.error = error;
@@ -23,11 +24,7 @@ public class ServiceException extends RuntimeException {
         this.error = error;
     }
 
-    public Error getError() {
-        return error;
+    public Error error() {
+        return this.error;
     }
-
-    public String getErrorCode() {
-        return error.code();
-    }
-} 
+}

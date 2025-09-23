@@ -18,7 +18,9 @@ public record CreateTransactionCommand(
         String notes,
         Boolean isFractional,
         BigDecimal fractionalMultiplier,
-        Currency commissionCurrency
+        Currency commissionCurrency,
+        String exchange,
+        String country
 ) {
 
     public Transaction toTransaction() {
@@ -31,10 +33,12 @@ public record CreateTransactionCommand(
                 currency,
                 transactionDate,
                 notes,
-                true,
+                Boolean.TRUE,
                 isFractional,
                 fractionalMultiplier,
-                commissionCurrency
+                commissionCurrency,
+                exchange,
+                country
         );
     }
 }

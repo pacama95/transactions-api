@@ -1,13 +1,15 @@
 package com.transaction.infrastructure.incoming.rest;
 
-import com.transaction.application.usecase.transaction.CreateTransactionUseCase;
-import com.transaction.application.usecase.transaction.DeleteTransactionUseCase;
+import com.transaction.domain.port.input.DeleteTransactionUseCase;
 import com.transaction.application.usecase.transaction.GetTransactionUseCase;
-import com.transaction.application.usecase.transaction.UpdateTransactionUseCase;
+import com.transaction.domain.port.input.UpdateTransactionUseCase;
 import com.transaction.domain.model.TransactionType;
+import com.transaction.domain.port.input.CreateTransactionUseCase;
+import com.transaction.domain.port.input.GetTransactionByTickerUseCase;
 import com.transaction.infrastructure.incoming.rest.dto.CreateTransactionRequest;
 import com.transaction.infrastructure.incoming.rest.dto.TransactionResponse;
 import com.transaction.infrastructure.incoming.rest.dto.UpdateTransactionRequest;
+import com.transaction.infrastructure.incoming.rest.mapper.ErrorMapper;
 import com.transaction.infrastructure.incoming.rest.mapper.TransactionMapper;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -44,6 +46,9 @@ public class TransactionController {
     GetTransactionUseCase getTransactionUseCase;
 
     @Inject
+    GetTransactionByTickerUseCase getTransactionByTickerUseCase;
+
+    @Inject
     UpdateTransactionUseCase updateTransactionUseCase;
 
     @Inject
@@ -65,12 +70,16 @@ public class TransactionController {
     public Uni<Response> createTransaction(@Valid CreateTransactionRequest request) {
         return Uni.createFrom().item(() -> transactionMapper.toCreateTransactionCommand(request))
                 .flatMap(command -> createTransactionUseCase.execute(command))
-                .map(transaction -> transactionMapper.toResponse(transaction))
-                .map(response -> Response.status(Response.Status.CREATED).entity(response).build())
-                .onFailure().recoverWithItem(throwable ->
-                        Response.status(Response.Status.BAD_REQUEST)
-                                .entity("Error creating transaction: " + throwable.getMessage())
-                                .build());
+                .map(result -> switch (result) {
+                    case CreateTransactionUseCase.Result.Success success ->
+                            Response.status(Response.Status.CREATED).entity(transactionMapper.toResponse(success.transaction())).build();
+                    case CreateTransactionUseCase.Result.Error error -> ErrorMapper.mapToResponse(error);
+                    case CreateTransactionUseCase.Result.PublishError publishError -> // TODO: we should send the event to a DLQ to retry later
+                            Response.status(Response.Status.CREATED)
+                                    .header("X-Event-Status", "FAILED")
+                                    .entity(transactionMapper.toResponse(publishError.transaction()))
+                                    .build();
+                });
     }
 
     /**
@@ -116,11 +125,17 @@ public class TransactionController {
     @Operation(summary = "Get transactions by ticker", description = "Retrieves all transactions for a specific stock ticker")
     @APIResponse(responseCode = "200", description = "List of transactions for the ticker",
             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(type = SchemaType.ARRAY, implementation = TransactionResponse.class)))
-    public Multi<TransactionResponse> getTransactionsByTicker(
+    public Uni<Response> getTransactionsByTicker(
             @Parameter(description = "Stock ticker symbol", required = true, example = "AAPL")
             @PathParam("ticker") String ticker) {
-        return getTransactionUseCase.getByTicker(ticker)
-                .map(transactionMapper::toResponse);
+        return getTransactionByTickerUseCase.getByTicker(ticker)
+                .map(result -> switch (result) {
+                    case GetTransactionByTickerUseCase.Result.Success success ->
+                            Response.ok(transactionMapper.toResponses(success.transactions())).build();
+                    case GetTransactionByTickerUseCase.Result.NotFound ignored ->
+                            Response.status(Response.Status.NOT_FOUND).build();
+                    case GetTransactionByTickerUseCase.Result.Error ignored -> Response.serverError().build();
+                });
     }
 
     /**
@@ -162,18 +177,19 @@ public class TransactionController {
             @PathParam("id") UUID id,
             @Valid UpdateTransactionRequest updateTransactionRequest) {
         return Uni.createFrom().item(() -> transactionMapper.toUpdateTransactionCommand(id, updateTransactionRequest))
-                .flatMap(updatedTransaction -> updateTransactionUseCase.execute(updatedTransaction))
-                .map(transaction -> {
-                    if (transaction == null) {
-                        return Response.status(Response.Status.NOT_FOUND).build();
-                    }
-                    return Response.ok(transactionMapper.toResponse(transaction)).build();
-                })
-                .onFailure().recoverWithItem(throwable ->
-                        Response.status(Response.Status.BAD_REQUEST)
-                                .entity("Error updating transaction: " + throwable.getMessage())
-                                .build()
-                );
+                .flatMap(command -> updateTransactionUseCase.execute(command))
+                .map(result -> switch (result) {
+                    case UpdateTransactionUseCase.Result.Success success ->
+                            Response.ok(transactionMapper.toResponse(success.transaction())).build();
+                    case UpdateTransactionUseCase.Result.NotFound ignored ->
+                            Response.status(Response.Status.NOT_FOUND).build();
+                    case UpdateTransactionUseCase.Result.PublishError publishError ->
+                            Response.ok(transactionMapper.toResponse(publishError.transaction()))
+                                    .header("X-Event-Status", "FAILED")
+                                    .build();
+                    case UpdateTransactionUseCase.Result.Error error ->
+                            ErrorMapper.mapToResponse(error);
+                });
     }
 
     /**
@@ -190,12 +206,12 @@ public class TransactionController {
             @Parameter(description = "Transaction ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
             @PathParam("id") UUID id) {
         return deleteTransactionUseCase.execute(id)
-                .map(deleted -> {
-                    if (deleted) {
-                        return Response.status(Response.Status.NO_CONTENT).build();
-                    } else {
-                        return Response.status(Response.Status.NOT_FOUND).build();
-                    }
+                .map(result -> switch (result) {
+                    case DeleteTransactionUseCase.Result.Success ignored -> Response.status(Response.Status.NO_CONTENT).build();
+                    case DeleteTransactionUseCase.Result.NotFound ignored -> Response.status(Response.Status.NOT_FOUND).build();
+                    case DeleteTransactionUseCase.Result.PublishError ignored -> Response.status(Response.Status.NO_CONTENT)
+                            .header("X-Event-Status", "FAILED").build();
+                    case DeleteTransactionUseCase.Result.Error ignored -> Response.serverError().build();
                 });
     }
 

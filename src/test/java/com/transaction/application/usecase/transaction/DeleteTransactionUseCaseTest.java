@@ -1,42 +1,43 @@
 package com.transaction.application.usecase.transaction;
 
+import com.transaction.domain.event.DomainEvent;
 import com.transaction.domain.exception.Errors;
-import com.transaction.domain.exception.ServiceException;
 import com.transaction.domain.model.Currency;
 import com.transaction.domain.model.Transaction;
 import com.transaction.domain.model.TransactionType;
+import com.transaction.domain.port.input.DeleteTransactionUseCase;
+import com.transaction.domain.port.output.EventPublisher;
 import com.transaction.domain.port.output.TransactionRepository;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.UUID;
-import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class DeleteTransactionUseCaseTest {
     private TransactionRepository transactionRepository;
-    private DeleteTransactionUseCase useCase;
+    private EventPublisher<DomainEvent<?>> eventPublisher;
+    private DeleteTransactionService useCase;
 
     @BeforeEach
     void setUp() {
         transactionRepository = mock(TransactionRepository.class);
-        useCase = new DeleteTransactionUseCase();
+        eventPublisher = mock(EventPublisher.class);
+        useCase = new DeleteTransactionService();
         useCase.transactionRepository = transactionRepository;
+        useCase.eventPublisher = eventPublisher;
     }
 
     @Test
     void testExecuteSuccess() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         Transaction existingTransaction = createTransaction(transactionId);
 
@@ -44,46 +45,44 @@ class DeleteTransactionUseCaseTest {
                 .thenReturn(Uni.createFrom().item(existingTransaction));
         when(transactionRepository.deleteById(transactionId))
                 .thenReturn(Uni.createFrom().item(true));
+        when(eventPublisher.publish(any(DomainEvent.class)))
+                .thenReturn(Uni.createFrom().voidItem());
 
-        // When
-        Uni<Boolean> result = useCase.execute(transactionId);
+        Uni<DeleteTransactionUseCase.Result> result = useCase.execute(transactionId);
 
-        // Then
-        Boolean deleted = result.subscribe()
+        DeleteTransactionUseCase.Result actual = result.subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertCompleted()
                 .getItem();
 
-        assertTrue(deleted);
+        assertInstanceOf(DeleteTransactionUseCase.Result.Success.class, actual);
         verify(transactionRepository).findById(transactionId);
         verify(transactionRepository).deleteById(transactionId);
+        verify(eventPublisher, atLeastOnce()).publish(any(DomainEvent.class));
     }
 
     @Test
     void testExecuteTransactionNotFound() {
-        // Given
         UUID transactionId = UUID.randomUUID();
 
         when(transactionRepository.findById(transactionId))
                 .thenReturn(Uni.createFrom().nullItem());
 
-        // When
-        Uni<Boolean> result = useCase.execute(transactionId);
+        Uni<DeleteTransactionUseCase.Result> result = useCase.execute(transactionId);
 
-        // Then
-        Boolean deleted = result.subscribe()
+        DeleteTransactionUseCase.Result actual = result.subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertCompleted()
                 .getItem();
 
-        assertFalse(deleted);
+        assertInstanceOf(DeleteTransactionUseCase.Result.NotFound.class, actual);
         verify(transactionRepository).findById(transactionId);
         verify(transactionRepository, never()).deleteById(any());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
-    void testExecuteDeleteFailed() {
-        // Given
+    void testExecuteDeleteFailedReturnsError() {
         UUID transactionId = UUID.randomUUID();
         Transaction existingTransaction = createTransaction(transactionId);
 
@@ -92,47 +91,40 @@ class DeleteTransactionUseCaseTest {
         when(transactionRepository.deleteById(transactionId))
                 .thenReturn(Uni.createFrom().item(false));
 
-        // When
-        Uni<Boolean> result = useCase.execute(transactionId);
-
-        // Then
-        Boolean deleted = result.subscribe()
+        DeleteTransactionUseCase.Result actual = useCase.execute(transactionId).subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertCompleted()
                 .getItem();
 
-        assertFalse(deleted);
+        assertInstanceOf(DeleteTransactionUseCase.Result.Error.class, actual);
         verify(transactionRepository).findById(transactionId);
         verify(transactionRepository).deleteById(transactionId);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
     void testExecuteFindByIdFailure() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         RuntimeException exception = new RuntimeException("Database error");
 
         when(transactionRepository.findById(transactionId))
                 .thenReturn(Uni.createFrom().failure(exception));
 
-        // When
-        Uni<Boolean> result = useCase.execute(transactionId);
-
-        // Then
-        var failure = result.subscribe()
+        DeleteTransactionUseCase.Result actual = useCase.execute(transactionId).subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(ServiceException.class)
-                .getFailure();
+                .assertCompleted()
+                .getItem();
 
-        assertEquals(Errors.DeleteTransaction.PERSISTENCE_ERROR, ((ServiceException) failure).getError());
-
+        assertInstanceOf(DeleteTransactionUseCase.Result.Error.class, actual);
+        DeleteTransactionUseCase.Result.Error error = (DeleteTransactionUseCase.Result.Error) actual;
+        assertEquals(Errors.DeleteTransactionsErrors.PERSISTENCE_ERROR, error.error());
         verify(transactionRepository).findById(transactionId);
         verify(transactionRepository, never()).deleteById(any());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
-    void testExecuteDeleteByIdFailure() {
-        // Given
+    void testExecuteDeleteByIdFailureReturnsError() {
         UUID transactionId = UUID.randomUUID();
         Transaction existingTransaction = createTransaction(transactionId);
         RuntimeException exception = new RuntimeException("Delete failed");
@@ -142,54 +134,42 @@ class DeleteTransactionUseCaseTest {
         when(transactionRepository.deleteById(transactionId))
                 .thenReturn(Uni.createFrom().failure(exception));
 
-        // When
-        Uni<Boolean> result = useCase.execute(transactionId);
-
-        // Then
-        result.subscribe()
-                .withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(RuntimeException.class);
-
-        verify(transactionRepository).findById(transactionId);
-        verify(transactionRepository).deleteById(transactionId);
-    }
-
-    @ParameterizedTest
-    @MethodSource("transactionTypeProvider")
-    void testExecuteWithDifferentTransactionTypes(TransactionType transactionType) {
-        // Given
-        UUID transactionId = UUID.randomUUID();
-        Transaction transaction = createTransactionWithType(transactionId, transactionType);
-
-        when(transactionRepository.findById(transactionId))
-                .thenReturn(Uni.createFrom().item(transaction));
-        when(transactionRepository.deleteById(transactionId))
-                .thenReturn(Uni.createFrom().item(true));
-
-        // When
-        Uni<Boolean> result = useCase.execute(transactionId);
-
-        // Then
-        Boolean deleted = result.subscribe()
+        DeleteTransactionUseCase.Result actual = useCase.execute(transactionId).subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertCompleted()
                 .getItem();
 
-        assertTrue(deleted);
+        assertInstanceOf(DeleteTransactionUseCase.Result.Error.class, actual);
         verify(transactionRepository).findById(transactionId);
         verify(transactionRepository).deleteById(transactionId);
+        verifyNoInteractions(eventPublisher);
     }
 
-    static Stream<Arguments> transactionTypeProvider() {
-        return Stream.of(
-                Arguments.of(TransactionType.BUY),
-                Arguments.of(TransactionType.SELL),
-                Arguments.of(TransactionType.DIVIDEND)
-        );
+    @Test
+    void testEventPublishingFailureReturnsPublishError() {
+        UUID transactionId = UUID.randomUUID();
+        Transaction existingTransaction = createTransaction(transactionId);
+
+        when(transactionRepository.findById(transactionId))
+                .thenReturn(Uni.createFrom().item(existingTransaction));
+        when(transactionRepository.deleteById(transactionId))
+                .thenReturn(Uni.createFrom().item(true));
+        when(eventPublisher.publish(any(DomainEvent.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("publish failed")));
+
+        DeleteTransactionUseCase.Result actual = useCase.execute(transactionId).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertCompleted()
+                .getItem();
+
+        assertInstanceOf(DeleteTransactionUseCase.Result.PublishError.class, actual);
+        verify(transactionRepository).findById(transactionId);
+        verify(transactionRepository).deleteById(transactionId);
+        verify(eventPublisher, atLeastOnce()).publish(any(DomainEvent.class));
     }
 
     private Transaction createTransaction(UUID id) {
-        return new Transaction(
+        return Transaction.create(
                 id,
                 "AAPL",
                 TransactionType.BUY,
@@ -203,26 +183,8 @@ class DeleteTransactionUseCaseTest {
                 false,
                 BigDecimal.ONE,
                 null,
-                Collections.emptyList()
-        );
-    }
-
-    private Transaction createTransactionWithType(UUID id, TransactionType type) {
-        return new Transaction(
-                id,
-                "TSLA",
-                type,
-                new BigDecimal("5"),
-                new BigDecimal("250.00"),
-                BigDecimal.ZERO,
-                Currency.USD,
-                LocalDate.of(2024, 2, 1),
-                null,
-                true,
-                false,
-                BigDecimal.ONE,
-                null,
-                Collections.emptyList()
+                "NYSE",
+                "USA"
         );
     }
 }

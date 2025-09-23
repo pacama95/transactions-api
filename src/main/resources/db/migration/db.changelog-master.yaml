@@ -7,3 +7,20 @@ databaseChangeLog:
             path: schema.sql
             relativeToChangelogFile: true
             splitStatements: false
+  - changeSet:
+      id: add-exchange-country-columns
+      author: ai-assistant
+      changes:
+        - addColumn:
+            tableName: transactions
+            columns:
+              - column:
+                  name: exchange
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: country
+                  type: varchar(50)
+                  constraints:
+                    nullable: false

@@ -1,113 +1,115 @@
 package com.transaction.application.usecase.transaction;
 
 import com.transaction.application.command.UpdateTransactionCommand;
+import com.transaction.domain.event.DomainEvent;
 import com.transaction.domain.exception.Errors;
-import com.transaction.domain.exception.ServiceException;
 import com.transaction.domain.model.Currency;
 import com.transaction.domain.model.Transaction;
 import com.transaction.domain.model.TransactionType;
+import com.transaction.domain.port.input.UpdateTransactionUseCase;
+import com.transaction.domain.port.output.EventPublisher;
 import com.transaction.domain.port.output.TransactionRepository;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.UUID;
-import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class UpdateTransactionUseCaseTest {
     private TransactionRepository transactionRepository;
-    private UpdateTransactionUseCase useCase;
+    private EventPublisher<DomainEvent<?>> eventPublisher;
+    private UpdateTransactionService useCase;
 
     @BeforeEach
     void setUp() {
         transactionRepository = mock(TransactionRepository.class);
-        useCase = new UpdateTransactionUseCase();
+        eventPublisher = mock(EventPublisher.class);
+        useCase = new UpdateTransactionService();
         useCase.transactionRepository = transactionRepository;
+        useCase.eventPublisher = eventPublisher;
     }
 
     @Test
     void testExecuteSuccess() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         Transaction existingTransaction = createExistingTransaction(transactionId);
         UpdateTransactionCommand command = createUpdateCommand(transactionId);
-        Transaction updatedTransaction = createUpdatedTransaction(transactionId);
 
         when(transactionRepository.findById(transactionId))
                 .thenReturn(Uni.createFrom().item(existingTransaction));
         when(transactionRepository.update(any(Transaction.class)))
-                .thenReturn(Uni.createFrom().item(updatedTransaction));
+                .thenAnswer(invocation -> {
+                    Transaction updated = invocation.getArgument(0);
+                    return Uni.createFrom().item(updated);
+                });
+        when(eventPublisher.publish(any(DomainEvent.class)))
+                .thenReturn(Uni.createFrom().voidItem());
 
-        // When
-        Uni<Transaction> result = useCase.execute(command);
+        Uni<UpdateTransactionUseCase.Result> result = useCase.execute(command);
 
-        // Then
-        Transaction actualTransaction = result.subscribe()
+        UpdateTransactionUseCase.Result actual = result.subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertCompleted()
                 .getItem();
 
-        assertNotNull(actualTransaction);
-        assertEquals(command.ticker(), actualTransaction.getTicker());
-        assertEquals(command.transactionType(), actualTransaction.getTransactionType());
-        assertEquals(command.quantity(), actualTransaction.getQuantity());
-        assertEquals(command.price(), actualTransaction.getPrice());
-        assertEquals(command.currency(), actualTransaction.getCurrency());
-        assertEquals(command.transactionDate(), actualTransaction.getTransactionDate());
-        assertEquals(command.notes(), actualTransaction.getNotes());
-        assertEquals(command.isFractional(), actualTransaction.getIsFractional());
-        assertEquals(command.fractionalMultiplier(), actualTransaction.getFractionalMultiplier());
-        assertEquals(command.commissionCurrency(), actualTransaction.getCommissionCurrency());
+        assertInstanceOf(UpdateTransactionUseCase.Result.Success.class, actual);
+        Transaction updated = ((UpdateTransactionUseCase.Result.Success) actual).transaction();
+
+        assertNotNull(updated);
+        assertEquals(command.ticker(), updated.getTicker());
+        assertEquals(command.transactionType(), updated.getTransactionType());
+        assertEquals(command.quantity(), updated.getQuantity());
+        assertEquals(command.price(), updated.getPrice());
+        assertEquals(command.currency(), updated.getCurrency());
+        assertEquals(command.transactionDate(), updated.getTransactionDate());
+        assertEquals(command.notes(), updated.getNotes());
+        assertEquals(command.isFractional(), updated.getIsFractional());
+        assertEquals(command.fractionalMultiplier(), updated.getFractionalMultiplier());
+        assertEquals(command.commissionCurrency(), updated.getCommissionCurrency());
 
         verify(transactionRepository).findById(transactionId);
         verify(transactionRepository).update(any(Transaction.class));
+        verify(eventPublisher, atLeastOnce()).publish(any(DomainEvent.class));
     }
 
     @Test
     void testExecuteTransactionNotFound() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         UpdateTransactionCommand command = createUpdateCommand(transactionId);
 
         when(transactionRepository.findById(transactionId))
                 .thenReturn(Uni.createFrom().nullItem());
 
-        // When
-        Uni<Transaction> result = useCase.execute(command);
+        Uni<UpdateTransactionUseCase.Result> result = useCase.execute(command);
 
-        // Then
-        ServiceException thrown = (ServiceException) result.subscribe()
+        UpdateTransactionUseCase.Result actual = result.subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(ServiceException.class)
-                .getFailure();
+                .assertCompleted()
+                .getItem();
 
-        assertEquals(Errors.UpdateTransaction.NOT_FOUND, thrown.getError());
+        assertInstanceOf(UpdateTransactionUseCase.Result.NotFound.class, actual);
         verify(transactionRepository).findById(transactionId);
         verify(transactionRepository, never()).update(any());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
     void testExecutePartialUpdate() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         Transaction existingTransaction = createExistingTransaction(transactionId);
         UpdateTransactionCommand partialCommand = new UpdateTransactionCommand(
                 transactionId,
-                "GOOGL", // Only update ticker
-                null, null, null, null, null, null, null, null, null, null
+                "GOOGL",
+                null, null, null, null, null, null, null, null, null, null,
+                null,
+                null
         );
 
         when(transactionRepository.findById(transactionId))
@@ -117,56 +119,27 @@ class UpdateTransactionUseCaseTest {
                     Transaction updated = invocation.getArgument(0);
                     return Uni.createFrom().item(updated);
                 });
+        when(eventPublisher.publish(any(DomainEvent.class)))
+                .thenReturn(Uni.createFrom().voidItem());
 
-        // When
-        Uni<Transaction> result = useCase.execute(partialCommand);
+        Uni<UpdateTransactionUseCase.Result> result = useCase.execute(partialCommand);
 
-        // Then
-        Transaction actualTransaction = result.subscribe()
+        UpdateTransactionUseCase.Result actual = result.subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertCompleted()
                 .getItem();
 
-        assertEquals("GOOGL", actualTransaction.getTicker());
-        // Other fields should remain unchanged
-        assertEquals(existingTransaction.getTransactionType(), actualTransaction.getTransactionType());
-        assertEquals(existingTransaction.getQuantity(), actualTransaction.getQuantity());
-        assertEquals(existingTransaction.getPrice(), actualTransaction.getPrice());
-    }
-
-    @ParameterizedTest
-    @MethodSource("updateFieldProvider")
-    void testExecuteUpdateSpecificFields(String field, Object value, String expectedValue) {
-        // Given
-        UUID transactionId = UUID.randomUUID();
-        Transaction existingTransaction = createExistingTransaction(transactionId);
-        UpdateTransactionCommand command = createCommandForField(transactionId, field, value);
-
-        when(transactionRepository.findById(transactionId))
-                .thenReturn(Uni.createFrom().item(existingTransaction));
-        when(transactionRepository.update(any(Transaction.class)))
-                .thenAnswer(invocation -> {
-                    Transaction updated = invocation.getArgument(0);
-                    return Uni.createFrom().item(updated);
-                });
-
-        // When
-        Uni<Transaction> result = useCase.execute(command);
-
-        // Then
-        Transaction actualTransaction = result.subscribe()
-                .withSubscriber(UniAssertSubscriber.create())
-                .assertCompleted()
-                .getItem();
-
-        assertNotNull(actualTransaction);
-        verify(transactionRepository).findById(transactionId);
-        verify(transactionRepository).update(any(Transaction.class));
+        assertInstanceOf(UpdateTransactionUseCase.Result.Success.class, actual);
+        Transaction updated = ((UpdateTransactionUseCase.Result.Success) actual).transaction();
+        assertEquals("GOOGL", updated.getTicker());
+        assertEquals(existingTransaction.getTransactionType(), updated.getTransactionType());
+        assertEquals(existingTransaction.getQuantity(), updated.getQuantity());
+        assertEquals(existingTransaction.getPrice(), updated.getPrice());
+        verify(eventPublisher, atLeastOnce()).publish(any(DomainEvent.class));
     }
 
     @Test
     void testExecuteRepositoryFailure() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         UpdateTransactionCommand command = createUpdateCommand(transactionId);
         RuntimeException exception = new RuntimeException("Database error");
@@ -174,21 +147,24 @@ class UpdateTransactionUseCaseTest {
         when(transactionRepository.findById(transactionId))
                 .thenReturn(Uni.createFrom().failure(exception));
 
-        // When
-        Uni<Transaction> result = useCase.execute(command);
+        Uni<UpdateTransactionUseCase.Result> result = useCase.execute(command);
 
-        // Then
-        result.subscribe()
+        UpdateTransactionUseCase.Result actual = result.subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(RuntimeException.class);
+                .assertCompleted()
+                .getItem();
 
+        assertInstanceOf(UpdateTransactionUseCase.Result.Error.class, actual);
+        UpdateTransactionUseCase.Result.Error error = (UpdateTransactionUseCase.Result.Error) actual;
+        assertEquals(Errors.UpdateTransactionsErrors.PERSISTENCE_ERROR, error.error());
+        assertEquals(command, error.command());
         verify(transactionRepository).findById(transactionId);
         verify(transactionRepository, never()).update(any());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
     void testExecuteUpdateFailure() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         Transaction existingTransaction = createExistingTransaction(transactionId);
         UpdateTransactionCommand command = createUpdateCommand(transactionId);
@@ -199,37 +175,26 @@ class UpdateTransactionUseCaseTest {
         when(transactionRepository.update(any(Transaction.class)))
                 .thenReturn(Uni.createFrom().failure(exception));
 
-        // When
-        Uni<Transaction> result = useCase.execute(command);
+        Uni<UpdateTransactionUseCase.Result> result = useCase.execute(command);
 
-        // Then
-        result.subscribe()
+        UpdateTransactionUseCase.Result actual = result.subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(RuntimeException.class);
+                .assertCompleted()
+                .getItem();
 
+        assertInstanceOf(UpdateTransactionUseCase.Result.Error.class, actual);
+        UpdateTransactionUseCase.Result.Error error = (UpdateTransactionUseCase.Result.Error) actual;
+        assertEquals(Errors.UpdateTransactionsErrors.PERSISTENCE_ERROR, error.error());
+        assertEquals(command, error.command());
         verify(transactionRepository).findById(transactionId);
         verify(transactionRepository).update(any(Transaction.class));
     }
 
     @Test
-    void testExecuteWithEmptyStrings() {
-        // Given
+    void testEventPublishingFailureReturnsPublishError() {
         UUID transactionId = UUID.randomUUID();
         Transaction existingTransaction = createExistingTransaction(transactionId);
-        UpdateTransactionCommand command = new UpdateTransactionCommand(
-                transactionId,
-                "", // Empty string - should not update
-                TransactionType.SELL,
-                new BigDecimal("20"),
-                new BigDecimal("200.00"),
-                new BigDecimal("5.00"),
-                Currency.EUR,
-                LocalDate.of(2024, 3, 1),
-                "", // Empty string - should not update
-                true,
-                new BigDecimal("2.0"),
-                Currency.GBP
-        );
+        UpdateTransactionCommand command = createUpdateCommand(transactionId);
 
         when(transactionRepository.findById(transactionId))
                 .thenReturn(Uni.createFrom().item(existingTransaction));
@@ -238,49 +203,22 @@ class UpdateTransactionUseCaseTest {
                     Transaction updated = invocation.getArgument(0);
                     return Uni.createFrom().item(updated);
                 });
+        when(eventPublisher.publish(any(DomainEvent.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("publish failed")));
 
-        // When
-        Uni<Transaction> result = useCase.execute(command);
-
-        // Then
-        Transaction actualTransaction = result.subscribe()
+        UpdateTransactionUseCase.Result actual = useCase.execute(command).subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertCompleted()
                 .getItem();
 
-        // Empty strings should not update the fields
-        assertEquals(existingTransaction.getTicker(), actualTransaction.getTicker());
-        assertEquals(existingTransaction.getNotes(), actualTransaction.getNotes());
-        // Other fields should be updated
-        assertEquals(command.transactionType(), actualTransaction.getTransactionType());
-        assertEquals(command.quantity(), actualTransaction.getQuantity());
-    }
-
-    static Stream<Arguments> updateFieldProvider() {
-        return Stream.of(
-                Arguments.of("ticker", "NVDA", "NVDA"),
-                Arguments.of("notes", "Updated notes", "Updated notes"),
-                Arguments.of("quantity", new BigDecimal("25"), "25"),
-                Arguments.of("price", new BigDecimal("300.00"), "300.00")
-        );
-    }
-
-    private UpdateTransactionCommand createCommandForField(UUID transactionId, String field, Object value) {
-        return switch (field) {
-            case "ticker" ->
-                    new UpdateTransactionCommand(transactionId, (String) value, null, null, null, null, null, null, null, null, null, null);
-            case "notes" ->
-                    new UpdateTransactionCommand(transactionId, null, null, null, null, null, null, null, (String) value, null, null, null);
-            case "quantity" ->
-                    new UpdateTransactionCommand(transactionId, null, null, (BigDecimal) value, null, null, null, null, null, null, null, null);
-            case "price" ->
-                    new UpdateTransactionCommand(transactionId, null, null, null, (BigDecimal) value, null, null, null, null, null, null, null);
-            default -> throw new IllegalArgumentException("Unknown field: " + field);
-        };
+        assertInstanceOf(UpdateTransactionUseCase.Result.PublishError.class, actual);
+        verify(transactionRepository).findById(transactionId);
+        verify(transactionRepository).update(any(Transaction.class));
+        verify(eventPublisher, atLeastOnce()).publish(any(DomainEvent.class));
     }
 
     private Transaction createExistingTransaction(UUID id) {
-        return new Transaction(
+        return Transaction.create(
                 id,
                 "AAPL",
                 TransactionType.BUY,
@@ -294,7 +232,8 @@ class UpdateTransactionUseCaseTest {
                 false,
                 BigDecimal.ONE,
                 Currency.USD,
-                new ArrayList<>()
+                "NYSE",
+                "USA"
         );
     }
 
@@ -311,26 +250,9 @@ class UpdateTransactionUseCaseTest {
                 "Updated transaction notes",
                 true,
                 new BigDecimal("0.5"),
-                Currency.GBP
-        );
-    }
-
-    private Transaction createUpdatedTransaction(UUID id) {
-        return new Transaction(
-                id,
-                "MSFT",
-                TransactionType.SELL,
-                new BigDecimal("5"),
-                new BigDecimal("420.75"),
-                new BigDecimal("12.50"),
-                Currency.EUR,
-                LocalDate.of(2024, 2, 20),
-                "Updated transaction notes",
-                true,
-                true,
-                new BigDecimal("0.5"),
                 Currency.GBP,
-                Collections.emptyList()
+                "NASDAQ",
+                "USA"
         );
     }
 }

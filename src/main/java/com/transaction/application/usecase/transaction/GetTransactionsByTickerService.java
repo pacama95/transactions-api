@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
  * Use case for retrieving transactions
  */
 @ApplicationScoped
-public class GetTransactionsByTickerUseCase implements GetTransactionByTickerUseCase {
+public class GetTransactionsByTickerService implements GetTransactionByTickerUseCase {
 
     @Inject
     TransactionRepository transactionRepository;
@@ -20,7 +20,12 @@ public class GetTransactionsByTickerUseCase implements GetTransactionByTickerUse
      */
     public Uni<Result> getByTicker(String ticker) {
         return transactionRepository.findByTicker(ticker)
-                .map(transactions -> (Result) new Result.Success(transactions))
+                .onItem().transform(transactions -> {
+                    if (transactions.isEmpty()) {
+                        return (Result) new Result.NotFound();
+                    }
+                    return new Result.Success(transactions);
+                })
                 .onFailure().recoverWithItem(Result.Error::new);
     }
 } 

@@ -3,10 +3,10 @@ package com.transaction.infrastructure.incoming.mcp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transaction.application.command.CreateTransactionCommand;
 import com.transaction.application.command.UpdateTransactionCommand;
-import com.transaction.application.usecase.transaction.CreateTransactionUseCase;
-import com.transaction.application.usecase.transaction.DeleteTransactionUseCase;
+import com.transaction.domain.port.input.CreateTransactionUseCase;
+import com.transaction.domain.port.input.DeleteTransactionUseCase;
 import com.transaction.application.usecase.transaction.GetTransactionUseCase;
-import com.transaction.application.usecase.transaction.UpdateTransactionUseCase;
+import com.transaction.domain.port.input.UpdateTransactionUseCase;
 import com.transaction.domain.model.Currency;
 import com.transaction.domain.model.TransactionType;
 import com.transaction.infrastructure.incoming.mcp.converter.ParameterConversionService;
@@ -57,7 +57,9 @@ public class PortfolioMcpServer {
             @ToolArg(description = "Fees currency", required = false, defaultValue = "USD") Object commissionCurrency,
             @ToolArg(description = "Transaction currency") Object currency,
             @ToolArg(description = "Transaction date (YYYY-MM-DD)", defaultValue = "TODAY") Object date,
-            @ToolArg(description = "Transaction notes", required = false) String notes) {
+            @ToolArg(description = "Transaction notes", required = false) String notes,
+            @ToolArg(description = "Stock exchange") String exchange,
+            @ToolArg(description = "Country of the stock") String country) {
 
         try {
             TransactionType convertedType = (TransactionType) parameterConversionService.convert(type, "type");
@@ -80,13 +82,22 @@ public class PortfolioMcpServer {
                     notes,
                     isFractional,
                     convertedFractionalMultiplier,
-                    convertedCommissionCurrency
+                    convertedCommissionCurrency,
+                    exchange,
+                    country
             );
 
             return createTransactionUseCase.execute(command)
                     .map(result -> {
                         try {
-                            return objectMapper.writeValueAsString(result);
+                            return switch (result) {
+                                case CreateTransactionUseCase.Result.Success success ->
+                                        objectMapper.writeValueAsString(success.transaction());
+                                case CreateTransactionUseCase.Result.PublishError publishError ->
+                                        objectMapper.writeValueAsString(publishError.transaction());
+                                case CreateTransactionUseCase.Result.Error error ->
+                                        throw new RuntimeException("Error creating transaction: " + error.error());
+                            };
                         } catch (Exception e) {
                             throw new RuntimeException("Error serializing result", e);
                         }
@@ -126,7 +137,9 @@ public class PortfolioMcpServer {
             @ToolArg(description = "Fees currency", required = false, defaultValue = "USD") Object commissionCurrency,
             @ToolArg(description = "Transaction currency", required = false, defaultValue = "USD") Object currency,
             @ToolArg(description = "Transaction date (YYYY-MM-DD)", required = false, defaultValue = "TODAY") Object date,
-            @ToolArg(description = "Transaction notes", required = false) String notes) {
+            @ToolArg(description = "Transaction notes", required = false) String notes,
+            @ToolArg(description = "Stock exchange", required = false) String exchange,
+            @ToolArg(description = "Country of the stock", required = false) String country) {
 
         try {
             return Uni.createFrom().item(() -> {
@@ -151,14 +164,24 @@ public class PortfolioMcpServer {
                                         notes,
                                         isFractional,
                                         convertedFractionalMultiplier,
-                                        convertedCommissionCurrency);
+                                        convertedCommissionCurrency,
+                                        exchange,
+                                        country);
                             }
                     )
-                    .flatMap(updateTransactionCommand ->
-                            updateTransactionUseCase.execute(updateTransactionCommand))
+                    .flatMap(updateTransactionCommand -> updateTransactionUseCase.execute(updateTransactionCommand))
                     .map(result -> {
                         try {
-                            return objectMapper.writeValueAsString(result);
+                            return switch (result) {
+                                case UpdateTransactionUseCase.Result.Success success ->
+                                        objectMapper.writeValueAsString(success.transaction());
+                                case UpdateTransactionUseCase.Result.PublishError publishError ->
+                                        objectMapper.writeValueAsString(publishError.transaction());
+                                case UpdateTransactionUseCase.Result.NotFound ignored ->
+                                        throw new RuntimeException("Transaction not found");
+                                case UpdateTransactionUseCase.Result.Error error ->
+                                        throw new RuntimeException("Error updating transaction: " + error.error());
+                            };
                         } catch (Exception e) {
                             throw new RuntimeException("Error serializing result", e);
                         }
@@ -176,7 +199,12 @@ public class PortfolioMcpServer {
                 .flatMap(trxId -> deleteTransactionUseCase.execute(trxId))
                 .map(result -> {
                     try {
-                        return objectMapper.writeValueAsString(result);
+                        return switch (result) {
+                            case DeleteTransactionUseCase.Result.Success success -> objectMapper.writeValueAsString(success.id());
+                            case DeleteTransactionUseCase.Result.NotFound notFound -> objectMapper.writeValueAsString(notFound.id());
+                            case DeleteTransactionUseCase.Result.PublishError publishError -> objectMapper.writeValueAsString(publishError.id());
+                            case DeleteTransactionUseCase.Result.Error error -> throw new RuntimeException("Error deleting transaction: " + error.error());
+                        };
                     } catch (Exception e) {
                         throw new RuntimeException("Error serializing result", e);
                     }

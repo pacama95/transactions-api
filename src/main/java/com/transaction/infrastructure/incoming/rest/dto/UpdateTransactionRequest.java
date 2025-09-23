@@ -25,16 +25,16 @@ public record UpdateTransactionRequest(
         TransactionType transactionType,
 
         @NotNull(message = "Quantity is required")
-        @DecimalMin(value = "0.0001", inclusive = true, message = "Quantity must be positive")
+        @DecimalMin(value = "0.0001", message = "Quantity must be positive")
         @Schema(description = "Number of shares", example = "100.00", required = true)
         BigDecimal quantity,
 
         @NotNull(message = "Price is required")
-        @DecimalMin(value = "0.01", inclusive = true, message = "Price must be positive")
+        @DecimalMin(value = "0.01", message = "Price must be positive")
         @Schema(description = "Price per share", example = "150.25", required = true)
         BigDecimal price,
 
-        @DecimalMin(value = "0.0", inclusive = true, message = "Fees cannot be negative")
+        @DecimalMin(value = "0.0", message = "Fees cannot be negative")
         @Schema(description = "Transaction fees", example = "9.99")
         BigDecimal fees,
 
@@ -56,6 +56,12 @@ public record UpdateTransactionRequest(
         @Schema(description = "Multiplier for fractional shares")
         BigDecimal fractionalMultiplier,
         @Schema(description = "Currency for commission fees")
-        Currency commissionCurrency
+        Currency commissionCurrency,
+        @Size(min = 1, max = 20, message = "Exchange must be between 1 and 20 characters")
+        @Schema(description = "Stock exchange", example = "NYSE")
+        String exchange,
+        @Size(min = 2, max = 50, message = "Country must be between 2 and 50 characters")
+        @Schema(description = "Country of the stock", example = "USA")
+        String country
 ) {
 } 

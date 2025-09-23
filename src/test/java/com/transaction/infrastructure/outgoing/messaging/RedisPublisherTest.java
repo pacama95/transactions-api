@@ -23,7 +23,6 @@ import org.mockito.ArgumentCaptor;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -77,11 +76,11 @@ class RedisPublisherTest {
 
         verify(mapper).toTransactionCreated(event);
         verify(objectMapper).writeValueAsString(message);
-        
+
         // Verify stream data structure
         ArgumentCaptor<Map<String, String>> streamDataCaptor = ArgumentCaptor.forClass(Map.class);
         verify(streamCommands).xadd(eq(TRANSACTION_CREATED_STREAM), streamDataCaptor.capture());
-        
+
         Map<String, String> capturedData = streamDataCaptor.getValue();
         assertEquals("TransactionCreated", capturedData.get("eventType"));
         assertEquals(serializedMessage, capturedData.get("payload"));
@@ -115,11 +114,11 @@ class RedisPublisherTest {
         assertEquals(transaction, capturedEvent.getData());
 
         verify(objectMapper).writeValueAsString(message);
-        
+
         // Verify stream data structure for updated event
         ArgumentCaptor<Map<String, String>> streamDataCaptor = ArgumentCaptor.forClass(Map.class);
         verify(streamCommands).xadd(eq(TRANSACTION_UPDATED_STREAM), streamDataCaptor.capture());
-        
+
         Map<String, String> capturedData = streamDataCaptor.getValue();
         assertEquals("TransactionUpdated", capturedData.get("eventType"));
         assertEquals(serializedMessage, capturedData.get("payload"));
@@ -194,7 +193,7 @@ class RedisPublisherTest {
     }
 
     private Transaction createTransaction() {
-        return new Transaction(
+        return Transaction.create(
                 UUID.randomUUID(),
                 "AAPL",
                 TransactionType.BUY,
@@ -208,7 +207,8 @@ class RedisPublisherTest {
                 false,
                 BigDecimal.ONE,
                 Currency.USD,
-                Collections.emptyList()
+                "NYSE",
+                "USA"
         );
     }
 

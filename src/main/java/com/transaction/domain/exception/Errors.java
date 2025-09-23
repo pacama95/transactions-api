@@ -2,43 +2,43 @@ package com.transaction.domain.exception;
 
 public interface Errors {
 
-    interface CreateTransaction {
-        String errorCode = "05";
+    interface CreateTransactionsErrors {
+        String ERROR_PREFIX = "01%s";
 
-        Error INVALID_INPUT = new Error(errorCode + "01");
-        Error NOT_FOUND = new Error(errorCode + "02");
-        Error PERSISTENCE_ERROR = new Error(errorCode + "03");
-        Error PUBLISH_DOMAIN_EVENT_ERROR = new Error(errorCode + "04");
-        Error GENERAL_ERROR = new Error(errorCode + "05");
+        Error GENERAL_ERROR = new Error(ERROR_PREFIX.formatted("001"));
+        Error PUBLISH_DOMAIN_EVENT_ERROR = new Error(ERROR_PREFIX.formatted("002"));
+        Error PERSISTENCE_ERROR = new Error(ERROR_PREFIX.formatted("003"));
+        Error NOT_FOUND = new Error(ERROR_PREFIX.formatted("004"));
+        Error INVALID_INPUT = new Error(ERROR_PREFIX.formatted("005"));
     }
 
-    interface DeleteTransaction {
-        String errorCode = "06";
+    interface DeleteTransactionsErrors {
+        String ERROR_PREFIX = "06%s";
 
-        Error INVALID_INPUT = new Error(errorCode + "01");
-        Error NOT_FOUND = new Error(errorCode + "02");
-        Error PERSISTENCE_ERROR = new Error(errorCode + "03");
+        Error INVALID_INPUT = new Error(ERROR_PREFIX.formatted("01"));
+        Error NOT_FOUND = new Error(ERROR_PREFIX.formatted("02"));
+        Error PERSISTENCE_ERROR = new Error(ERROR_PREFIX.formatted("03"));
     }
 
-    interface UpdateTransaction {
-        String errorCode = "07";
+    interface UpdateTransactionsErrors {
+        String ERROR_PREFIX = "07%s";
 
-        Error INVALID_INPUT = new Error(errorCode + "01");
-        Error NOT_FOUND = new Error(errorCode + "02");
-        Error PERSISTENCE_ERROR = new Error(errorCode + "03");
+        Error INVALID_INPUT = new Error(ERROR_PREFIX.formatted("01"));
+        Error NOT_FOUND = new Error(ERROR_PREFIX.formatted("02"));
+        Error PERSISTENCE_ERROR = new Error(ERROR_PREFIX.formatted("03"));
     }
 
-    interface GetTransaction {
-        String errorCode = "08";
+    interface GetTransactionsErrors {
+        String ERROR_PREFIX = "08%s";
 
-        Error INVALID_INPUT = new Error(errorCode + "01");
-        Error NOT_FOUND = new Error(errorCode + "02");
-        Error PERSISTENCE_ERROR = new Error(errorCode + "03");
+        Error INVALID_INPUT = new Error(ERROR_PREFIX.formatted("01"));
+        Error NOT_FOUND = new Error(ERROR_PREFIX.formatted("02"));
+        Error PERSISTENCE_ERROR = new Error(ERROR_PREFIX.formatted("03"));
     }
 
-    interface PublishTransaction {
-        String errorCode = "09";
+    interface PublishTransactionsErrors {
+        String ERROR_PREFIX = "09%s";
 
-        Error PUBLISH_ERROR = new Error(errorCode + "01");
+        Error PUBLISH_ERROR = new Error(ERROR_PREFIX.formatted("01"));
     }
 }

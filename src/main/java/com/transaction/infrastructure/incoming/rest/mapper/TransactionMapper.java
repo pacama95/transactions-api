@@ -11,6 +11,7 @@ import org.mapstruct.Mapping;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.UUID;
 
 @Mapper(componentModel = "cdi")
@@ -25,18 +26,26 @@ public interface TransactionMapper {
     @Mapping(target = "totalValue", expression = "java(normalizeMonetary(transaction.getTotalValue()))")
     @Mapping(target = "totalCost", expression = "java(normalizeMonetary(transaction.getTotalCost()))")
     @Mapping(target = "fractionalMultiplier", expression = "java(normalizeMonetary(transaction.getFractionalMultiplier()))")
+    @Mapping(target = "exchange", source = "exchange")
+    @Mapping(target = "country", source = "country")
     TransactionResponse toResponse(Transaction transaction);
+
+    List<TransactionResponse> toResponses(List<Transaction> transactions);
 
     @Mapping(target = "quantity", expression = "java(normalizeQuantity(createTransactionRequest.quantity()))")
     @Mapping(target = "price", expression = "java(normalizeMonetary(createTransactionRequest.price()))")
     @Mapping(target = "fees", expression = "java(normalizeMonetary(createTransactionRequest.fees()))")
     @Mapping(target = "fractionalMultiplier", expression = "java(normalizeMonetary(createTransactionRequest.fractionalMultiplier()))")
+    @Mapping(target = "exchange", source = "exchange")
+    @Mapping(target = "country", source = "country")
     CreateTransactionCommand toCreateTransactionCommand(CreateTransactionRequest createTransactionRequest);
 
     @Mapping(target = "quantity", expression = "java(normalizeQuantity(updateTransactionRequest.quantity()))")
     @Mapping(target = "price", expression = "java(normalizeMonetary(updateTransactionRequest.price()))")
     @Mapping(target = "fees", expression = "java(normalizeMonetary(updateTransactionRequest.fees()))")
     @Mapping(target = "fractionalMultiplier", expression = "java(normalizeMonetary(updateTransactionRequest.fractionalMultiplier()))")
+    @Mapping(target = "exchange", source = "updateTransactionRequest.exchange")
+    @Mapping(target = "country", source = "updateTransactionRequest.country")
     UpdateTransactionCommand toUpdateTransactionCommand(UUID transactionId, UpdateTransactionRequest updateTransactionRequest);
 
     // Normalization helpers

@@ -33,16 +33,15 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     public Uni<Transaction> save(Transaction transaction) {
         return Uni.createFrom().item(() -> transactionEntityMapper.toEntity(transaction))
                 .flatMap(panacheRepository::persistAndFlush)
-                .map(transactionEntity ->
-                        transactionEntityMapper.toDomain(transactionEntity, transaction.getDomainEvents()))
-                .onFailure().transform(throwable -> new ServiceException(Errors.CreateTransaction.PERSISTENCE_ERROR, throwable));
+                .map(transactionEntityMapper::createTransaction)
+                .onFailure().transform(throwable -> new ServiceException(Errors.CreateTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Transaction> findById(UUID id) {
         return panacheRepository.findById(id)
                 .map(transactionEntityMapper::toDomain)
-                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
@@ -51,7 +50,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                 .map(entities -> entities.stream()
                         .map(transactionEntityMapper::toDomain)
                         .toList())
-                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
@@ -60,7 +59,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                 .map(entities -> entities.stream()
                         .map(transactionEntityMapper::toDomain)
                         .toList())
-                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
@@ -72,7 +71,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                 .map(entities -> entities.stream()
                         .map(transactionEntityMapper::toDomain)
                         .toList())
-                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
@@ -81,33 +80,35 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                 .flatMap(transactionEntity ->
                         panacheRepository.getSession().flatMap(session -> session.merge(transactionEntity)))
                 .flatMap(panacheRepository::persistAndFlush)
-                .map(transactionEntity ->
-                        transactionEntityMapper.toDomain(transactionEntity, transaction.popEvents()))
-                .onFailure().transform(throwable -> new ServiceException(Errors.UpdateTransaction.PERSISTENCE_ERROR, throwable));
+                .map(transactionEntity -> {
+                        transaction.popEvents(); // Clear events but don't pass them to mapper
+                        return transactionEntityMapper.toDomain(transactionEntity);
+                })
+                .onFailure().transform(throwable -> new ServiceException(Errors.UpdateTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Boolean> deleteById(UUID id) {
         return panacheRepository.deleteById(id)
-                .onFailure().transform(throwable -> new ServiceException(Errors.DeleteTransaction.PERSISTENCE_ERROR, throwable));
+                .onFailure().transform(throwable -> new ServiceException(Errors.DeleteTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Boolean> existsById(UUID id) {
         return panacheRepository.findByIdActive(id)
                 .map(Objects::nonNull)
-                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Long> countAll() {
         return panacheRepository.count()
-                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 
     @Override
     public Uni<Long> countByTicker(String ticker) {
         return panacheRepository.countByTicker(ticker)
-                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransaction.PERSISTENCE_ERROR, throwable));
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 } 

@@ -32,7 +32,7 @@ public class KafkaProducer implements EventPublisher<DomainEvent<Transaction>> {
 //            case TransactionUpdatedEvent event -> publishTransactionUpdated(event);
 //            default -> Uni.createFrom().failure(
 //                    new ServiceException(
-//                        Errors.PublishTransaction.PUBLISH_ERROR,
+//                        Errors.PublishTransactionsErrors.PUBLISH_ERROR,
 //                        new IllegalArgumentException("Unsupported event type: " + domainEvent.getClass().getSimpleName())
 //                    )
 //            );
@@ -50,7 +50,7 @@ public class KafkaProducer implements EventPublisher<DomainEvent<Transaction>> {
 //                .onFailure().transform(throwable -> {
 //                    Log.error("Failed to publish transaction created event with ID %s and eventId %s"
 //                            .formatted(message.payload().id(), message.eventId()));
-//                    return new ServiceException(Errors.PublishTransaction.PUBLISH_ERROR, throwable);
+//                    return new ServiceException(Errors.PublishTransactionsErrors.PUBLISH_ERROR, throwable);
 //                });
 //    }
 //
@@ -69,7 +69,7 @@ public class KafkaProducer implements EventPublisher<DomainEvent<Transaction>> {
 //                .onFailure().transform(throwable -> {
 //                    Log.error("Failed to publish transaction updated event with ID %s and eventId %s"
 //                            .formatted(message.payload().id(), message.eventId()));
-//                    return new ServiceException(Errors.PublishTransaction.PUBLISH_ERROR, throwable);
+//                    return new ServiceException(Errors.PublishTransactionsErrors.PUBLISH_ERROR, throwable);
 //                });
 //    }
 }

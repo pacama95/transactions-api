@@ -1,6 +1,7 @@
 package com.transaction.infrastructure.incoming.rest;
 
 import com.transaction.domain.exception.Error;
+import com.transaction.domain.exception.Errors;
 import com.transaction.domain.exception.ServiceException;
 import jakarta.json.JsonObject;
 import jakarta.ws.rs.core.Response;
@@ -13,33 +14,33 @@ class ServiceExceptionMapperTest {
 
     @Test
     void testNotFoundError() {
-        ServiceException ex = new ServiceException(new Error("NOT_FOUND"));
+        ServiceException ex = new ServiceException(Errors.GetTransactionsErrors.NOT_FOUND);
         Response response = mapper.toResponse(ex);
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
         JsonObject json = (JsonObject) response.getEntity();
-        assertEquals("NOT_FOUND", json.getString("errorCode"));
+        assertEquals("0802", json.getString("errorCode"));
     }
 
     @Test
     void testInvalidInputError() {
-        ServiceException ex = new ServiceException(new Error("INVALID_INPUT"));
+        ServiceException ex = new ServiceException(Errors.CreateTransactionsErrors.INVALID_INPUT);
         Response response = mapper.toResponse(ex);
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         JsonObject json = (JsonObject) response.getEntity();
-        assertEquals("INVALID_INPUT", json.getString("errorCode"));
+        assertEquals("01005", json.getString("errorCode"));
     }
 
     @Test
-    void testOperationFailedError() {
-        ServiceException ex = new ServiceException(new Error("OPERATION_FAILED"));
+    void testPersistenceError() {
+        ServiceException ex = new ServiceException(Errors.CreateTransactionsErrors.PERSISTENCE_ERROR);
         Response response = mapper.toResponse(ex);
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
         JsonObject json = (JsonObject) response.getEntity();
-        assertEquals("OPERATION_FAILED", json.getString("errorCode"));
+        assertEquals("01003", json.getString("errorCode"));
     }
 
     @Test
-    void testUnknownError() {
+    void testLegacyErrorStillWorks() {
         ServiceException ex = new ServiceException(new Error("SOMETHING_ELSE"));
         Response response = mapper.toResponse(ex);
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());

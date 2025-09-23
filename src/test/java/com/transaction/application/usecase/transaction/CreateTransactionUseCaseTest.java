@@ -2,6 +2,7 @@ package com.transaction.application.usecase.transaction;
 
 import com.transaction.application.command.CreateTransactionCommand;
 import com.transaction.domain.event.DomainEvent;
+import com.transaction.domain.event.TransactionCreatedEvent;
 import com.transaction.domain.exception.Errors;
 import com.transaction.domain.exception.ServiceException;
 import com.transaction.domain.model.Currency;
@@ -94,9 +95,7 @@ class CreateTransactionUseCaseTest {
         assertEquals(command.transactionDate(), actualTransaction.getTransactionDate());
 
         verify(transactionRepository).save(any(Transaction.class));
-        // With current behavior, repository returns a transaction without domain events,
-        // so no publishing is attempted.
-        verifyNoInteractions(eventPublisher);
+        verify(eventPublisher).publish(any(TransactionCreatedEvent.class));
     }
 
     @Test
@@ -141,8 +140,7 @@ class CreateTransactionUseCaseTest {
 
         assertInstanceOf(CreateTransactionUseCase.Result.Success.class, actualResult);
 
-        // No publishing is attempted when repository returns a transaction without domain events
-        verifyNoInteractions(eventPublisher);
+        verify(eventPublisher).publish(any(TransactionCreatedEvent.class));
     }
 
     @Test
@@ -215,55 +213,10 @@ class CreateTransactionUseCaseTest {
                 .getItem();
 
         // Since no events are present, no publishing is attempted and result remains Success
-        assertInstanceOf(CreateTransactionUseCase.Result.Success.class, actualResult);
+        assertInstanceOf(CreateTransactionUseCase.Result.PublishError.class, actualResult);
 
         verify(transactionRepository).save(any(Transaction.class));
-        // No publishing is attempted
-        verifyNoInteractions(eventPublisher);
-    }
-
-    @Test
-    void testExecuteWithNoEvents() {
-        // Given
-        CreateTransactionCommand command = createValidCommand();
-        UUID transactionId = UUID.randomUUID();
-
-        // Create transaction without domain events
-        Transaction savedTransaction = Transaction.create(
-                transactionId,
-                command.ticker(),
-                command.transactionType(),
-                command.quantity(),
-                command.price(),
-                command.fees(),
-                command.currency(),
-                command.transactionDate(),
-                command.notes(),
-                true,
-                command.isFractional(),
-                command.fractionalMultiplier(),
-                command.commissionCurrency(),
-                "NYSE",
-                "USA"
-        );
-
-        when(transactionRepository.save(any(Transaction.class)))
-                .thenReturn(Uni.createFrom().item(savedTransaction));
-
-        // When
-        Uni<CreateTransactionUseCase.Result> result = useCase.execute(command);
-
-        // Then
-        CreateTransactionUseCase.Result actualResult = result.subscribe()
-                .withSubscriber(UniAssertSubscriber.create())
-                .assertCompleted()
-                .getItem();
-
-        assertInstanceOf(CreateTransactionUseCase.Result.Success.class, actualResult);
-
-        verify(transactionRepository).save(any(Transaction.class));
-        // Event publisher should not be called if no events to publish
-        verify(eventPublisher, never()).publish(any(DomainEvent.class));
+        verify(eventPublisher).publish(any(TransactionCreatedEvent.class));
     }
 
     @Test
@@ -321,7 +274,7 @@ class CreateTransactionUseCaseTest {
         assertEquals(command.commissionCurrency(), actualTransaction.getCommissionCurrency());
 
         verify(transactionRepository).save(any(Transaction.class));
-        verifyNoInteractions(eventPublisher);
+        verify(eventPublisher).publish(any(TransactionCreatedEvent.class));
     }
 
     private CreateTransactionCommand createValidCommand() {

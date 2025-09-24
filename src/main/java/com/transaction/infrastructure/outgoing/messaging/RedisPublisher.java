@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transaction.domain.event.DomainEvent;
 import com.transaction.domain.event.TransactionCreatedEvent;
+import com.transaction.domain.event.TransactionDeletedEvent;
 import com.transaction.domain.event.TransactionUpdatedEvent;
 import com.transaction.domain.exception.Errors;
 import com.transaction.domain.exception.ServiceException;
@@ -12,6 +13,8 @@ import com.transaction.domain.port.output.EventPublisher;
 import com.transaction.infrastructure.outgoing.messaging.mapper.TransactionMessageMapper;
 import com.transaction.infrastructure.outgoing.messaging.message.Message;
 import com.transaction.infrastructure.outgoing.messaging.message.TransactionCreatedData;
+import com.transaction.infrastructure.outgoing.messaging.message.TransactionDeletedData;
+import com.transaction.infrastructure.outgoing.messaging.message.TransactionUpdatedData;
 import io.quarkus.logging.Log;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.stream.ReactiveStreamCommands;
@@ -21,21 +24,17 @@ import jakarta.inject.Named;
 
 import java.util.Map;
 
-/**
- * Redis implementation of EventPublisher output port.
- * This adapter publishes domain events to Redis Streams for event sourcing.
- */
 @ApplicationScoped
 @Named("redisPublisher")
 public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> {
 
+    private static final String TRANSACTION_CREATED_STREAM = "transaction:created";
+    private static final String TRANSACTION_UPDATED_STREAM = "transaction:updated";
+    private static final String TRANSACTION_DELETED_STREAM = "transaction:deleted";
+
     private final ReactiveStreamCommands<String, String, String> streamCommands;
     private final TransactionMessageMapper mapper;
     private final ObjectMapper objectMapper;
-
-    // Redis stream names
-    private static final String TRANSACTION_CREATED_STREAM = "transaction:created";
-    private static final String TRANSACTION_UPDATED_STREAM = "transaction:updated";
 
     public RedisPublisher(ReactiveRedisDataSource redisDataSource,
                           TransactionMessageMapper mapper,
@@ -50,6 +49,7 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
         return switch (domainEvent) {
             case TransactionCreatedEvent event -> publishTransactionCreated(event);
             case TransactionUpdatedEvent event -> publishTransactionUpdated(event);
+            case TransactionDeletedEvent event -> publishTransactionDeleted(event);
             default -> Uni.createFrom().failure(
                     new ServiceException(
                             Errors.PublishTransactionsErrors.PUBLISH_ERROR,
@@ -59,15 +59,11 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
         };
     }
 
-    /**
-     * Publishes a TransactionCreatedEvent to the transaction:created Redis stream.
-     */
     private Uni<Void> publishTransactionCreated(TransactionCreatedEvent transactionCreatedEvent) {
         Message<TransactionCreatedData> message = mapper.toTransactionCreated(transactionCreatedEvent);
 
         return serializeMessage(message)
                 .flatMap(serializedMessage -> {
-                    // Create stream entry with event metadata and payload
                     Map<String, String> streamData = Map.of(
                             "eventId", message.eventId().toString(),
                             "eventType", "TransactionCreated",
@@ -94,19 +90,11 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
                         new ServiceException(Errors.PublishTransactionsErrors.PUBLISH_ERROR, throwable));
     }
 
-    /**
-     * Publishes a TransactionUpdatedEvent to the transaction:updated Redis stream.
-     */
     private Uni<Void> publishTransactionUpdated(TransactionUpdatedEvent transactionUpdatedEvent) {
-        // For now, reuse the same message structure for updated events
-        // In the future, this could be mapped to a different message type
-        Message<TransactionCreatedData> message = mapper.toTransactionCreated(
-                new TransactionCreatedEvent(transactionUpdatedEvent.getData())
-        );
+        Message<TransactionUpdatedData> message = mapper.toTransactionUpdated(transactionUpdatedEvent);
 
         return serializeMessage(message)
                 .flatMap(serializedMessage -> {
-                    // Create stream entry with event metadata and payload
                     Map<String, String> streamData = Map.of(
                             "eventId", message.eventId().toString(),
                             "eventType", "TransactionUpdated",
@@ -133,10 +121,41 @@ public class RedisPublisher implements EventPublisher<DomainEvent<Transaction>> 
                         new ServiceException(Errors.PublishTransactionsErrors.PUBLISH_ERROR, throwable));
     }
 
+    private Uni<Void> publishTransactionDeleted(TransactionDeletedEvent transactionDeletedEvent) {
+        Message<TransactionDeletedData> message = mapper.toTransactionDeleted(transactionDeletedEvent);
+
+        return serializeMessage(message)
+                .flatMap(serializedMessage -> {
+                    Map<String, String> streamData = Map.of(
+                            "eventId", message.eventId().toString(),
+                            "eventType", "TransactionDeleted",
+                            "occurredAt", message.occurredAt().toString(),
+                            "messageCreatedAt", message.messageCreatedAt().toString(),
+                            "payload", serializedMessage
+                    );
+
+                    return streamCommands.xadd(TRANSACTION_DELETED_STREAM, streamData)
+                            .onItem().invoke(messageId ->
+                                    Log.info("Published transaction deleted event with ID %s and eventId %s to Redis stream %s with messageId %s"
+                                            .formatted(
+                                                    message.payload().id(),
+                                                    message.eventId(),
+                                                    TRANSACTION_DELETED_STREAM,
+                                                    messageId
+                                            )))
+                            .replaceWithVoid();
+                })
+                .onFailure().invoke(throwable ->
+                        Log.error("Failed to publish transaction deleted event with ID %s and eventId %s to Redis stream"
+                                .formatted(message.payload().id(), message.eventId()), throwable))
+                .onFailure().transform(throwable ->
+                        new ServiceException(Errors.PublishTransactionsErrors.PUBLISH_ERROR, throwable));
+    }
+
     /**
      * Serializes a message to JSON string for Redis stream publishing.
      */
-    private Uni<String> serializeMessage(Message<TransactionCreatedData> message) {
+    private Uni<String> serializeMessage(Message<?> message) {
         return Uni.createFrom().item(() -> {
             try {
                 return objectMapper.writeValueAsString(message);

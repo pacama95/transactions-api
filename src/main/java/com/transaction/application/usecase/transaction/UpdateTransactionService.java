@@ -2,8 +2,8 @@ package com.transaction.application.usecase.transaction;
 
 import com.transaction.application.command.UpdateTransactionCommand;
 import com.transaction.domain.event.DomainEvent;
-import com.transaction.domain.exception.Errors;
 import com.transaction.domain.exception.Error;
+import com.transaction.domain.exception.Errors;
 import com.transaction.domain.exception.ServiceException;
 import com.transaction.domain.model.Transaction;
 import com.transaction.domain.port.input.UpdateTransactionUseCase;
@@ -64,7 +64,6 @@ public class UpdateTransactionService implements UpdateTransactionUseCase {
                     );
                     return current;
                 })
-                // Persist and keep returning the same instance to preserve domain events
                 .flatMap(updated -> transactionRepository.update(updated).replaceWith(updated));
     }
 

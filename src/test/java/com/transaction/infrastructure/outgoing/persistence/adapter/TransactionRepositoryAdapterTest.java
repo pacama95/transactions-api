@@ -142,7 +142,6 @@ class TransactionRepositoryAdapterTest {
         when(panacheRepository.getSession()).thenReturn(Uni.createFrom().item(session));
         when(session.merge(entity)).thenReturn(Uni.createFrom().item(mergedEntity));
         when(panacheRepository.persistAndFlush(mergedEntity)).thenReturn(Uni.createFrom().item(mergedEntity));
-        when(transaction.popEvents()).thenReturn(domainEvents);
         when(transactionEntityMapper.toDomain(mergedEntity)).thenReturn(transaction);
 
         Uni<Transaction> uni = adapter.update(transaction);

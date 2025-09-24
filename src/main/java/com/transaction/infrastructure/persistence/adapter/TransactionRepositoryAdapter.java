@@ -80,10 +80,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                 .flatMap(transactionEntity ->
                         panacheRepository.getSession().flatMap(session -> session.merge(transactionEntity)))
                 .flatMap(panacheRepository::persistAndFlush)
-                .map(transactionEntity -> {
-                        transaction.popEvents(); // Clear events but don't pass them to mapper
-                        return transactionEntityMapper.toDomain(transactionEntity);
-                })
+                .map(transactionEntityMapper::toDomain)
                 .onFailure().transform(throwable -> new ServiceException(Errors.UpdateTransactionsErrors.PERSISTENCE_ERROR, throwable));
     }
 

@@ -129,6 +129,8 @@ class TransactionEntityMapperTest {
         assertEquals(Currency.EUR, transaction.getCommissionCurrency());
         assertEquals(true, transaction.getIsFractional());
         assertEquals(new BigDecimal("0.5"), transaction.getFractionalMultiplier());
+        assertNotNull(transaction.getDomainEvents());
+        assertTrue(transaction.getDomainEvents().isEmpty());
     }
 
     @ParameterizedTest

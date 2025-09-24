@@ -3,7 +3,6 @@ package com.transaction.domain.model;
 import com.transaction.domain.event.DomainEvent;
 import com.transaction.domain.event.TransactionCreatedEvent;
 import com.transaction.domain.event.TransactionUpdatedEvent;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Getter
-@AllArgsConstructor(onConstructor = @__({@Default}))
 public class Transaction {
     private final UUID id;
     private String ticker;
@@ -31,7 +29,7 @@ public class Transaction {
     private Currency commissionCurrency;
     private String exchange;
     private String country;
-    private List<DomainEvent<?>> domainEvents = new ArrayList<>();
+    private List<DomainEvent<?>> domainEvents;
 
     private Transaction(UUID id,
                         String ticker,
@@ -67,6 +65,41 @@ public class Transaction {
         this.domainEvents.add(new TransactionCreatedEvent(this));
     }
 
+    @Default
+    public Transaction(UUID id,
+                       String ticker,
+                       TransactionType transactionType,
+                       BigDecimal quantity,
+                       BigDecimal price,
+                       BigDecimal fees,
+                       Currency currency,
+                       LocalDate transactionDate,
+                       String notes,
+                       Boolean isActive,
+                       Boolean isFractional,
+                       BigDecimal fractionalMultiplier,
+                       Currency commissionCurrency,
+                       String exchange,
+                       String country,
+                       List<DomainEvent<?>> domainEvents) {
+        this.id = id;
+        this.ticker = ticker;
+        this.transactionType = transactionType;
+        this.quantity = quantity;
+        this.price = price;
+        this.fees = fees;
+        this.currency = currency;
+        this.transactionDate = transactionDate;
+        this.notes = notes;
+        this.isActive = isActive;
+        this.isFractional = isFractional;
+        this.fractionalMultiplier = fractionalMultiplier;
+        this.commissionCurrency = commissionCurrency;
+        this.exchange = exchange;
+        this.country = country;
+        this.domainEvents = new ArrayList<>();
+    }
+
     public Transaction(String ticker,
                        TransactionType transactionType,
                        BigDecimal quantity,
@@ -96,6 +129,7 @@ public class Transaction {
         this.commissionCurrency = commissionCurrency;
         this.exchange = exchange;
         this.country = country;
+        this.domainEvents = new ArrayList<>();
     }
 
     public BigDecimal getTotalValue() {

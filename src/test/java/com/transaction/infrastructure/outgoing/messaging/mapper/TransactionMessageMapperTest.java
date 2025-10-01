@@ -16,6 +16,7 @@ import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -109,11 +110,16 @@ class TransactionMessageMapperTest {
                 false,
                 BigDecimal.ONE,
                 Currency.USD,
-                "LSE",
-                "UK"
+                "NASDAQ",
+                "USA"
         );
 
-        TransactionUpdatedEvent event = new TransactionUpdatedEvent(tx);
+        // Get the event that was generated (index 1 because Transaction.create adds a TransactionCreatedEvent first)
+        List<com.transaction.domain.event.DomainEvent<?>> events = tx.popEvents();
+        TransactionUpdatedEvent event = (TransactionUpdatedEvent) events.stream()
+                .filter(e -> e instanceof TransactionUpdatedEvent)
+                .findFirst()
+                .orElseThrow();
 
         Message<TransactionUpdatedData> msg = mapper.toTransactionUpdated(event);
 
@@ -125,18 +131,42 @@ class TransactionMessageMapperTest {
 
         TransactionUpdatedData p = msg.payload();
         assertNotNull(p);
-        assertEquals(id, p.id());
-        assertEquals("MSFT", p.ticker());
-        assertEquals(TransactionType.SELL, p.transactionType());
-        assertEquals(new BigDecimal("6.000000"), p.quantity());
-        assertEquals(new BigDecimal("260.0000"), p.price());
-        assertEquals(new BigDecimal("2.5000"), p.fees());
-        assertEquals(Currency.GBP, p.currency());
-        assertEquals(LocalDate.of(2024, 8, 1), p.transactionDate());
-        assertEquals("Updated notes", p.notes());
-        assertEquals(false, p.isFractional());
-        assertEquals(BigDecimal.ONE, p.fractionalMultiplier());
-        assertEquals(Currency.USD, p.commissionCurrency());
+
+        // Verify previous transaction state
+        TransactionUpdatedData.TransactionSnapshot previous = p.previousTransaction();
+        assertNotNull(previous);
+        assertEquals(id, previous.id());
+        assertEquals("MSFT", previous.ticker());
+        assertEquals(TransactionType.SELL, previous.transactionType());
+        assertEquals(new BigDecimal("5.500000"), previous.quantity());
+        assertEquals(new BigDecimal("250.7500"), previous.price());
+        assertEquals(new BigDecimal("2.0000"), previous.fees());
+        assertEquals(Currency.EUR, previous.currency());
+        assertEquals(LocalDate.of(2024, 7, 15), previous.transactionDate());
+        assertEquals("Initial notes", previous.notes());
+        assertEquals(true, previous.isFractional());
+        assertEquals(new BigDecimal("0.5000"), previous.fractionalMultiplier());
+        assertEquals(Currency.GBP, previous.commissionCurrency());
+        assertEquals("LSE", previous.exchange());
+        assertEquals("UK", previous.country());
+
+        // Verify new transaction state
+        TransactionUpdatedData.TransactionSnapshot newTx = p.newTransaction();
+        assertNotNull(newTx);
+        assertEquals(id, newTx.id());
+        assertEquals("MSFT", newTx.ticker());
+        assertEquals(TransactionType.SELL, newTx.transactionType());
+        assertEquals(new BigDecimal("6.000000"), newTx.quantity());
+        assertEquals(new BigDecimal("260.0000"), newTx.price());
+        assertEquals(new BigDecimal("2.5000"), newTx.fees());
+        assertEquals(Currency.GBP, newTx.currency());
+        assertEquals(LocalDate.of(2024, 8, 1), newTx.transactionDate());
+        assertEquals("Updated notes", newTx.notes());
+        assertEquals(false, newTx.isFractional());
+        assertEquals(BigDecimal.ONE, newTx.fractionalMultiplier());
+        assertEquals(Currency.USD, newTx.commissionCurrency());
+        assertEquals("NASDAQ", newTx.exchange());
+        assertEquals("USA", newTx.country());
     }
 
     @Test

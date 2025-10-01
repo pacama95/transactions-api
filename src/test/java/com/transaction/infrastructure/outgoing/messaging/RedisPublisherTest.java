@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -86,16 +87,18 @@ class RedisPublisherTest {
         verify(streamCommands).xadd(eq(TRANSACTION_CREATED_STREAM), streamDataCaptor.capture());
 
         Map<String, String> capturedData = streamDataCaptor.getValue();
-        assertEquals("TransactionCreated", capturedData.get("eventType"));
         assertEquals(serializedMessage, capturedData.get("payload"));
     }
 
     @Test
     void testPublishTransactionUpdatedEventSuccess() throws JsonProcessingException {
         // Given
-        Transaction transaction = createTransaction();
-        TransactionUpdatedEvent event = new TransactionUpdatedEvent(transaction);
-        Message<TransactionUpdatedData> message = createMessageForTransactionUpdated(transaction);
+        Transaction previousTransaction = createTransaction();
+        Transaction newTransaction = createTransaction();
+        com.transaction.domain.model.TransactionUpdateData updateData = 
+            new com.transaction.domain.model.TransactionUpdateData(previousTransaction, newTransaction);
+        TransactionUpdatedEvent event = new TransactionUpdatedEvent(updateData);
+        Message<TransactionUpdatedData> message = createMessageForTransactionUpdated(previousTransaction, newTransaction);
         String serializedMessage = "serialized-message";
 
         ArgumentCaptor<TransactionUpdatedEvent> eventCaptor = ArgumentCaptor.forClass(TransactionUpdatedEvent.class);
@@ -112,9 +115,9 @@ class RedisPublisherTest {
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertCompleted();
 
-        // Verify the updated event was converted to created event
+        // Verify the updated event contains the update data
         TransactionUpdatedEvent capturedEvent = eventCaptor.getValue();
-        assertEquals(transaction, capturedEvent.getData());
+        assertEquals(updateData, capturedEvent.getData());
 
         verify(objectMapper).writeValueAsString(message);
 
@@ -123,7 +126,6 @@ class RedisPublisherTest {
         verify(streamCommands).xadd(eq(TRANSACTION_UPDATED_STREAM), streamDataCaptor.capture());
 
         Map<String, String> capturedData = streamDataCaptor.getValue();
-        assertEquals("TransactionUpdated", capturedData.get("eventType"));
         assertEquals(serializedMessage, capturedData.get("payload"));
     }
 
@@ -160,7 +162,7 @@ class RedisPublisherTest {
         verify(streamCommands).xadd(eq(TRANSACTION_DELETED_STREAM), streamDataCaptor.capture());
 
         Map<String, String> capturedData = streamDataCaptor.getValue();
-        assertEquals("TransactionDeleted", capturedData.get("eventType"));
+        assertNotNull(capturedData.get("payload"));
         assertEquals(serializedMessage, capturedData.get("payload"));
     }
 
@@ -272,12 +274,59 @@ class RedisPublisherTest {
                 UUID.randomUUID(),
                 Instant.now(),
                 Instant.now(),
+                "TransactionCreated",
                 payload
         );
     }
 
-    private Message<TransactionUpdatedData> createMessageForTransactionUpdated(Transaction transaction) {
-        TransactionUpdatedData payload = new TransactionUpdatedData(
+    private Message<TransactionUpdatedData> createMessageForTransactionUpdated(Transaction previousTransaction, Transaction newTransaction) {
+        TransactionUpdatedData.TransactionSnapshot previousSnapshot = new TransactionUpdatedData.TransactionSnapshot(
+                previousTransaction.getId(),
+                previousTransaction.getTicker(),
+                previousTransaction.getTransactionType(),
+                previousTransaction.getQuantity(),
+                previousTransaction.getPrice(),
+                previousTransaction.getFees(),
+                previousTransaction.getCurrency(),
+                previousTransaction.getTransactionDate(),
+                previousTransaction.getNotes(),
+                previousTransaction.getIsFractional(),
+                previousTransaction.getFractionalMultiplier(),
+                previousTransaction.getCommissionCurrency(),
+                previousTransaction.getExchange(),
+                previousTransaction.getCountry()
+        );
+
+        TransactionUpdatedData.TransactionSnapshot newSnapshot = new TransactionUpdatedData.TransactionSnapshot(
+                newTransaction.getId(),
+                newTransaction.getTicker(),
+                newTransaction.getTransactionType(),
+                newTransaction.getQuantity(),
+                newTransaction.getPrice(),
+                newTransaction.getFees(),
+                newTransaction.getCurrency(),
+                newTransaction.getTransactionDate(),
+                newTransaction.getNotes(),
+                newTransaction.getIsFractional(),
+                newTransaction.getFractionalMultiplier(),
+                newTransaction.getCommissionCurrency(),
+                newTransaction.getExchange(),
+                newTransaction.getCountry()
+        );
+
+        TransactionUpdatedData payload = new TransactionUpdatedData(previousSnapshot, newSnapshot);
+
+        return new Message<>(
+                UUID.randomUUID(),
+                Instant.now(),
+                Instant.now(),
+                "TransactionUpdated",
+                payload
+        );
+    }
+
+    private Message<TransactionDeletedData> createMessageForTransactionDeleted(Transaction transaction) {
+        TransactionDeletedData payload = new TransactionDeletedData(
                 transaction.getId(),
                 transaction.getTicker(),
                 transaction.getTransactionType(),
@@ -296,17 +345,7 @@ class RedisPublisherTest {
                 UUID.randomUUID(),
                 Instant.now(),
                 Instant.now(),
-                payload
-        );
-    }
-
-    private Message<TransactionDeletedData> createMessageForTransactionDeleted(Transaction transaction) {
-        TransactionDeletedData payload = new TransactionDeletedData(transaction.getId());
-
-        return new Message<>(
-                UUID.randomUUID(),
-                Instant.now(),
-                Instant.now(),
+                "TransactionDeleted",
                 payload
         );
     }

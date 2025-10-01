@@ -5,7 +5,7 @@ import com.transaction.domain.event.TransactionDeletedEvent;
 import com.transaction.domain.exception.Errors;
 import com.transaction.domain.exception.ServiceException;
 import com.transaction.domain.port.input.DeleteTransactionUseCase;
-import com.transaction.domain.port.output.EventPublisher;
+import com.transaction.domain.port.output.DomainEventPublisher;
 import com.transaction.domain.port.output.TransactionRepository;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Multi;
@@ -25,7 +25,7 @@ public class DeleteTransactionService implements DeleteTransactionUseCase {
 
     @Inject
     @Named("redisPublisher")
-    EventPublisher<DomainEvent<?>> eventPublisher;
+    DomainEventPublisher eventPublisher;
 
     @Override
     @WithTransaction
@@ -44,13 +44,13 @@ public class DeleteTransactionService implements DeleteTransactionUseCase {
                                     TransactionDeletedEvent event = new TransactionDeletedEvent(found);
                                     return publishEvents(List.of(event))
                                             .onItem().transform(ignored -> (DeleteTransactionUseCase.Result) new Result.Success(id))
-                                            .onFailure().recoverWithItem(t -> (DeleteTransactionUseCase.Result) new Result.PublishError(id, t));
+                                            .onFailure().recoverWithItem(t -> new Result.PublishError(id, t));
                                 } else {
                                     return Uni.createFrom().item(new Result.Error(Errors.DeleteTransactionsErrors.PERSISTENCE_ERROR, id, new RuntimeException("Delete returned false")));
                                 }
                             });
                 })
-                .onFailure().recoverWithItem(t -> (DeleteTransactionUseCase.Result) new Result.Error(Errors.DeleteTransactionsErrors.PERSISTENCE_ERROR, id, t));
+                .onFailure().recoverWithItem(t -> new Result.Error(Errors.DeleteTransactionsErrors.PERSISTENCE_ERROR, id, t));
     }
 
     private Uni<Void> publishEvents(List<? extends DomainEvent<?>> events) {

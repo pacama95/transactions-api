@@ -7,7 +7,8 @@ import com.transaction.domain.exception.Errors;
 import com.transaction.domain.exception.ServiceException;
 import com.transaction.domain.model.Transaction;
 import com.transaction.domain.model.TransactionError;
-import com.transaction.domain.port.output.EventPublisher;
+import com.transaction.domain.port.input.CreateTransactionUseCase;
+import com.transaction.domain.port.output.DomainEventPublisher;
 import com.transaction.domain.port.output.TransactionRepository;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.logging.Log;
@@ -18,14 +19,14 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 @ApplicationScoped
-public class CreateTransactionService implements com.transaction.domain.port.input.CreateTransactionUseCase {
+public class CreateTransactionService implements CreateTransactionUseCase {
 
     @Inject
     TransactionRepository transactionRepository;
 
     @Inject
     @Named("redisPublisher")
-    EventPublisher<DomainEvent<?>> eventPublisher;
+    DomainEventPublisher eventPublisher;
 
     @WithTransaction
     public Uni<Result> execute(CreateTransactionCommand command) {

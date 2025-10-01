@@ -1,8 +1,7 @@
 package com.transaction.infrastructure.outgoing.messaging;
 
 import com.transaction.domain.event.DomainEvent;
-import com.transaction.domain.model.Transaction;
-import com.transaction.domain.port.output.EventPublisher;
+import com.transaction.domain.port.output.DomainEventPublisher;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Named;
@@ -13,7 +12,7 @@ import jakarta.inject.Named;
  */
 @ApplicationScoped
 @Named("kafkaProducer")
-public class KafkaProducer implements EventPublisher<DomainEvent<Transaction>> {
+public class KafkaProducer implements DomainEventPublisher {
 
     //    private final MutinyEmitter<Message<TransactionCreatedData>> transactionEmitter;
 //    private final TransactionMessageMapper mapper;
@@ -26,7 +25,7 @@ public class KafkaProducer implements EventPublisher<DomainEvent<Transaction>> {
 //    }
 //
     @Override
-    public Uni<Void> publish(DomainEvent<Transaction> domainEvent) {
+    public Uni<Void> publish(DomainEvent<?> domainEvent) {
 //        return switch (domainEvent) {
 //            case TransactionCreatedEvent event -> publishTransactionCreated(event);
 //            case TransactionUpdatedEvent event -> publishTransactionUpdated(event);

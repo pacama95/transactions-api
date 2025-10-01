@@ -7,7 +7,7 @@ import com.transaction.domain.exception.Errors;
 import com.transaction.domain.exception.ServiceException;
 import com.transaction.domain.model.Transaction;
 import com.transaction.domain.port.input.UpdateTransactionUseCase;
-import com.transaction.domain.port.output.EventPublisher;
+import com.transaction.domain.port.output.DomainEventPublisher;
 import com.transaction.domain.port.output.TransactionRepository;
 import com.transaction.util.StringUtils;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
@@ -28,7 +28,7 @@ public class UpdateTransactionService implements UpdateTransactionUseCase {
 
     @Inject
     @Named("redisPublisher")
-    EventPublisher<DomainEvent<?>> eventPublisher;
+    DomainEventPublisher eventPublisher;
 
     @Override
     @WithTransaction
@@ -68,8 +68,7 @@ public class UpdateTransactionService implements UpdateTransactionUseCase {
     }
 
     private Uni<Result> publishDomainEvents(Result result) {
-        if (result instanceof Result.Success success) {
-            Transaction transaction = success.transaction();
+        if (result instanceof Result.Success(Transaction transaction)) {
             List<DomainEvent<?>> events = transaction.popEvents();
             if (events.isEmpty()) {
                 return Uni.createFrom().item(result);

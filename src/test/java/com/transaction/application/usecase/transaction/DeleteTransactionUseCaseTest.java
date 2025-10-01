@@ -6,7 +6,7 @@ import com.transaction.domain.model.Currency;
 import com.transaction.domain.model.Transaction;
 import com.transaction.domain.model.TransactionType;
 import com.transaction.domain.port.input.DeleteTransactionUseCase;
-import com.transaction.domain.port.output.EventPublisher;
+import com.transaction.domain.port.output.DomainEventPublisher;
 import com.transaction.domain.port.output.TransactionRepository;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
@@ -24,13 +24,13 @@ import static org.mockito.Mockito.*;
 
 class DeleteTransactionUseCaseTest {
     private TransactionRepository transactionRepository;
-    private EventPublisher<DomainEvent<?>> eventPublisher;
+    private DomainEventPublisher eventPublisher;
     private DeleteTransactionService useCase;
 
     @BeforeEach
     void setUp() {
         transactionRepository = mock(TransactionRepository.class);
-        eventPublisher = mock(EventPublisher.class);
+        eventPublisher = mock(DomainEventPublisher.class);
         useCase = new DeleteTransactionService();
         useCase.transactionRepository = transactionRepository;
         useCase.eventPublisher = eventPublisher;

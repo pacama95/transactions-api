@@ -23,13 +23,13 @@ public class Transaction {
     private Currency currency;
     private LocalDate transactionDate;
     private String notes;
-    private Boolean isActive;
+    private final Boolean isActive;
     private Boolean isFractional;
     private BigDecimal fractionalMultiplier;
     private Currency commissionCurrency;
     private String exchange;
     private String country;
-    private List<DomainEvent<?>> domainEvents;
+    private final List<DomainEvent<?>> domainEvents;
 
     private Transaction(UUID id,
                         String ticker,
@@ -195,6 +195,9 @@ public class Transaction {
                        String exchange,
                        String country) {
 
+        // Capture previous state before making any changes
+        Transaction previousState = createSnapshot();
+
         if (ticker != null) this.ticker = ticker;
         if (transactionType != null) this.transactionType = transactionType;
         if (quantity != null) this.quantity = quantity;
@@ -209,7 +212,34 @@ public class Transaction {
         if (exchange != null) this.exchange = exchange;
         if (country != null) this.country = country;
 
-        this.domainEvents.add(new TransactionUpdatedEvent(this));
+        // Create snapshot of current state after updates
+        Transaction newState = createSnapshot();
+
+        this.domainEvents.add(new TransactionUpdatedEvent(new TransactionUpdateData(previousState, newState)));
+    }
+
+    /**
+     * Creates a snapshot of the current transaction state without domain events.
+     */
+    private Transaction createSnapshot() {
+        return new Transaction(
+                this.id,
+                this.ticker,
+                this.transactionType,
+                this.quantity,
+                this.price,
+                this.fees,
+                this.currency,
+                this.transactionDate,
+                this.notes,
+                this.isActive,
+                this.isFractional,
+                this.fractionalMultiplier,
+                this.commissionCurrency,
+                this.exchange,
+                this.country,
+                new ArrayList<>() // Empty events list for snapshot
+        );
     }
 
     public List<DomainEvent<?>> getDomainEvents() {

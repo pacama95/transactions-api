@@ -1,8 +1,11 @@
 package com.transaction.domain.event;
 
+import lombok.Getter;
+
 import java.time.Instant;
 import java.util.UUID;
 
+@Getter
 public abstract class DomainEvent<T> {
     private final UUID eventId;
     private final Instant occurredAt;
@@ -13,14 +16,4 @@ public abstract class DomainEvent<T> {
         this.eventId = UUID.randomUUID();
         this.occurredAt = Instant.now();
     }
-
-    public UUID getEventId() {
-        return eventId;
-    }
-
-    public Instant getOccurredAt() {
-        return occurredAt;
-    }
-
-    public T getData() { return data; }
 }

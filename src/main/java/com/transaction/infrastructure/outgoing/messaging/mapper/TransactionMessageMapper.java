@@ -20,18 +20,21 @@ public interface TransactionMessageMapper {
     @Mapping(target = "eventId", source = "eventId")
     @Mapping(target = "occurredAt", source = "occurredAt")
     @Mapping(target = "messageCreatedAt", expression = "java(generateMessageCreatedAt())")
+    @Mapping(target = "eventType", constant = "TransactionCreated")
     @Mapping(target = "payload", source = "transactionCreatedEvent", qualifiedByName = "mapToTransactionCreatedPayload")
     Message<TransactionCreatedData> toTransactionCreated(TransactionCreatedEvent transactionCreatedEvent);
 
     @Mapping(target = "eventId", source = "eventId")
     @Mapping(target = "occurredAt", source = "occurredAt")
     @Mapping(target = "messageCreatedAt", expression = "java(generateMessageCreatedAt())")
+    @Mapping(target = "eventType", constant = "TransactionUpdated")
     @Mapping(target = "payload", source = "transactionUpdatedEvent", qualifiedByName = "mapToTransactionUpdatedPayload")
     Message<TransactionUpdatedData> toTransactionUpdated(TransactionUpdatedEvent transactionUpdatedEvent);
 
     @Mapping(target = "eventId", source = "eventId")
     @Mapping(target = "occurredAt", source = "occurredAt")
     @Mapping(target = "messageCreatedAt", expression = "java(generateMessageCreatedAt())")
+    @Mapping(target = "eventType", constant = "TransactionDeleted")
     @Mapping(target = "payload", source = "transactionDeletedEvent", qualifiedByName = "mapToTransactionDeletedPayload")
     Message<TransactionDeletedData> toTransactionDeleted(TransactionDeletedEvent transactionDeletedEvent);
 
@@ -51,6 +54,27 @@ public interface TransactionMessageMapper {
     TransactionCreatedData mapToTransactionCreatedPayload(TransactionCreatedEvent transactionCreatedEvent);
 
     @org.mapstruct.Named("mapToTransactionUpdatedPayload")
+    @Mapping(target = "previousTransaction", source = "data.previousTransaction")
+    @Mapping(target = "newTransaction", source = "data.newTransaction")
+    TransactionUpdatedData mapToTransactionUpdatedPayload(TransactionUpdatedEvent transactionUpdatedEvent);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "ticker", source = "ticker")
+    @Mapping(target = "transactionType", source = "transactionType")
+    @Mapping(target = "quantity", source = "quantity")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "fees", source = "fees")
+    @Mapping(target = "currency", source = "currency")
+    @Mapping(target = "transactionDate", source = "transactionDate")
+    @Mapping(target = "notes", source = "notes")
+    @Mapping(target = "isFractional", source = "isFractional")
+    @Mapping(target = "fractionalMultiplier", source = "fractionalMultiplier")
+    @Mapping(target = "commissionCurrency", source = "commissionCurrency")
+    @Mapping(target = "exchange", source = "exchange")
+    @Mapping(target = "country", source = "country")
+    TransactionUpdatedData.TransactionSnapshot toTransactionSnapshot(com.transaction.domain.model.Transaction transaction);
+
+    @org.mapstruct.Named("mapToTransactionDeletedPayload")
     @Mapping(target = "id", source = "data.id")
     @Mapping(target = "ticker", source = "data.ticker")
     @Mapping(target = "transactionType", source = "data.transactionType")
@@ -63,10 +87,6 @@ public interface TransactionMessageMapper {
     @Mapping(target = "isFractional", source = "data.isFractional")
     @Mapping(target = "fractionalMultiplier", source = "data.fractionalMultiplier")
     @Mapping(target = "commissionCurrency", source = "data.commissionCurrency")
-    TransactionUpdatedData mapToTransactionUpdatedPayload(TransactionUpdatedEvent transactionUpdatedEvent);
-
-    @org.mapstruct.Named("mapToTransactionDeletedPayload")
-    @Mapping(target = "id", source = "data.id")
     TransactionDeletedData mapToTransactionDeletedPayload(TransactionDeletedEvent transactionDeletedEvent);
 
     default Instant generateMessageCreatedAt() {

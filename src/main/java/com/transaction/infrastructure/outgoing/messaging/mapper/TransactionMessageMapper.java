@@ -51,6 +51,8 @@ public interface TransactionMessageMapper {
     @Mapping(target = "isFractional", source = "data.isFractional")
     @Mapping(target = "fractionalMultiplier", source = "data.fractionalMultiplier")
     @Mapping(target = "commissionCurrency", source = "data.commissionCurrency")
+    @Mapping(target = "exchange", source = "data.exchange")
+    @Mapping(target = "country", source = "data.country")
     TransactionCreatedData mapToTransactionCreatedPayload(TransactionCreatedEvent transactionCreatedEvent);
 
     @org.mapstruct.Named("mapToTransactionUpdatedPayload")
@@ -87,6 +89,8 @@ public interface TransactionMessageMapper {
     @Mapping(target = "isFractional", source = "data.isFractional")
     @Mapping(target = "fractionalMultiplier", source = "data.fractionalMultiplier")
     @Mapping(target = "commissionCurrency", source = "data.commissionCurrency")
+    @Mapping(target = "exchange", source = "data.exchange")
+    @Mapping(target = "country", source = "data.country")
     TransactionDeletedData mapToTransactionDeletedPayload(TransactionDeletedEvent transactionDeletedEvent);
 
     default Instant generateMessageCreatedAt() {

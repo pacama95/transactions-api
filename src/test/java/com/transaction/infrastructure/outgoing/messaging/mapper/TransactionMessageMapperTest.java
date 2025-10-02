@@ -74,6 +74,8 @@ class TransactionMessageMapperTest {
         assertEquals(false, p.isFractional());
         assertEquals(BigDecimal.ONE, p.fractionalMultiplier());
         assertEquals(Currency.USD, p.commissionCurrency());
+        assertEquals("NASDAQ", p.exchange());
+        assertEquals("USA", p.country());
     }
 
     @Test
@@ -203,6 +205,19 @@ class TransactionMessageMapperTest {
         TransactionDeletedData p = msg.payload();
         assertNotNull(p);
         assertEquals(id, p.id());
+        assertEquals("TSLA", p.ticker());
+        assertEquals(TransactionType.BUY, p.transactionType());
+        assertEquals(new BigDecimal("1.000000"), p.quantity());
+        assertEquals(new BigDecimal("100.0000"), p.price());
+        assertEquals(new BigDecimal("0.0000"), p.fees());
+        assertEquals(Currency.USD, p.currency());
+        assertEquals(LocalDate.of(2024, 1, 1), p.transactionDate());
+        assertEquals(null, p.notes());
+        assertEquals(false, p.isFractional());
+        assertEquals(BigDecimal.ONE, p.fractionalMultiplier());
+        assertEquals(Currency.USD, p.commissionCurrency());
+        assertEquals("NASDAQ", p.exchange());
+        assertEquals("USA", p.country());
     }
 }
 

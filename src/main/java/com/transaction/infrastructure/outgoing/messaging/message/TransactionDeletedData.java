@@ -24,6 +24,8 @@ public record TransactionDeletedData(
         String notes,
         Boolean isFractional,
         BigDecimal fractionalMultiplier,
-        Currency commissionCurrency
+        Currency commissionCurrency,
+        String exchange,
+        String country
 ) {
 }

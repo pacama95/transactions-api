@@ -267,7 +267,9 @@ class RedisPublisherTest {
                 transaction.getNotes(),
                 transaction.getIsFractional(),
                 transaction.getFractionalMultiplier(),
-                transaction.getCommissionCurrency()
+                transaction.getCommissionCurrency(),
+                transaction.getExchange(),
+                transaction.getCountry()
         );
 
         return new Message<>(
@@ -338,7 +340,9 @@ class RedisPublisherTest {
                 transaction.getNotes(),
                 transaction.getIsFractional(),
                 transaction.getFractionalMultiplier(),
-                transaction.getCommissionCurrency()
+                transaction.getCommissionCurrency(),
+                transaction.getExchange(),
+                transaction.getCountry()
         );
 
         return new Message<>(

@@ -57,6 +57,8 @@ dependencies {
     testImplementation 'io.rest-assured:rest-assured'
     testImplementation 'io.quarkus:quarkus-test-h2'
     testImplementation 'io.quarkus:quarkus-panache-mock'
+    testImplementation 'org.mockito:mockito-core:5.+'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.+'
 
     // Kafka test
     testImplementation 'io.quarkus:quarkus-test-kafka-companion'

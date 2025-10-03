@@ -3,13 +3,16 @@ package com.transaction.infrastructure.incoming.mcp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transaction.application.command.CreateTransactionCommand;
 import com.transaction.application.command.UpdateTransactionCommand;
-import com.transaction.domain.port.input.CreateTransactionUseCase;
-import com.transaction.domain.port.input.DeleteTransactionUseCase;
 import com.transaction.application.usecase.transaction.GetTransactionUseCase;
-import com.transaction.domain.port.input.UpdateTransactionUseCase;
 import com.transaction.domain.model.Currency;
 import com.transaction.domain.model.TransactionType;
+import com.transaction.domain.port.input.CreateTransactionUseCase;
+import com.transaction.domain.port.input.DeleteTransactionUseCase;
+import com.transaction.domain.port.input.GetTransactionByTickerUseCase;
+import com.transaction.domain.port.input.UpdateTransactionUseCase;
 import com.transaction.infrastructure.incoming.mcp.converter.ParameterConversionService;
+import com.transaction.infrastructure.incoming.mcp.dto.*;
+import com.transaction.infrastructure.incoming.mcp.mapper.*;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
 import io.quarkiverse.mcp.server.ToolCallException;
@@ -41,7 +44,28 @@ public class PortfolioMcpServer {
     DeleteTransactionUseCase deleteTransactionUseCase;
 
     @Inject
+    GetTransactionByTickerUseCase getTransactionByTickerUseCase;
+
+    @Inject
     ParameterConversionService parameterConversionService;
+
+    @Inject
+    CreateTransactionResponseMapper createTransactionResponseMapper;
+
+    @Inject
+    UpdateTransactionResponseMapper updateTransactionResponseMapper;
+
+    @Inject
+    DeleteTransactionResponseMapper deleteTransactionResponseMapper;
+
+    @Inject
+    GetTransactionResponseMapper getTransactionResponseMapper;
+
+    @Inject
+    GetTransactionsByTickerResponseMapper getTransactionsByTickerResponseMapper;
+
+    @Inject
+    SearchTransactionsResponseMapper searchTransactionsResponseMapper;
 
     // ============ MCP TOOL METHODS ============
 
@@ -90,14 +114,15 @@ public class PortfolioMcpServer {
             return createTransactionUseCase.execute(command)
                     .map(result -> {
                         try {
-                            return switch (result) {
+                            CreateTransactionResponseDto responseDto = switch (result) {
                                 case CreateTransactionUseCase.Result.Success success ->
-                                        objectMapper.writeValueAsString(success.transaction());
+                                        createTransactionResponseMapper.toSuccessDto(success);
                                 case CreateTransactionUseCase.Result.PublishError publishError ->
-                                        objectMapper.writeValueAsString(publishError.transaction());
+                                        createTransactionResponseMapper.toPublishErrorDto(publishError);
                                 case CreateTransactionUseCase.Result.Error error ->
-                                        throw new RuntimeException("Error creating transaction: " + error.error());
+                                        createTransactionResponseMapper.toErrorDto(error);
                             };
+                            return objectMapper.writeValueAsString(responseDto);
                         } catch (Exception e) {
                             throw new RuntimeException("Error serializing result", e);
                         }
@@ -115,7 +140,8 @@ public class PortfolioMcpServer {
                 .flatMap(trxId -> getTransactionUseCase.getById(trxId))
                 .map(transaction -> {
                     try {
-                        return objectMapper.writeValueAsString(transaction);
+                        GetTransactionResponseDto.Success responseDto = getTransactionResponseMapper.toSuccessDto(transaction);
+                        return objectMapper.writeValueAsString(responseDto);
                     } catch (Exception e) {
                         throw new RuntimeException("Error serializing result", e);
                     }
@@ -172,16 +198,17 @@ public class PortfolioMcpServer {
                     .flatMap(updateTransactionCommand -> updateTransactionUseCase.execute(updateTransactionCommand))
                     .map(result -> {
                         try {
-                            return switch (result) {
+                            UpdateTransactionResponseDto responseDto = switch (result) {
                                 case UpdateTransactionUseCase.Result.Success success ->
-                                        objectMapper.writeValueAsString(success.transaction());
+                                        updateTransactionResponseMapper.toSuccessDto(success);
                                 case UpdateTransactionUseCase.Result.PublishError publishError ->
-                                        objectMapper.writeValueAsString(publishError.transaction());
-                                case UpdateTransactionUseCase.Result.NotFound ignored ->
-                                        throw new RuntimeException("Transaction not found");
+                                        updateTransactionResponseMapper.toPublishErrorDto(publishError);
+                                case UpdateTransactionUseCase.Result.NotFound notFound ->
+                                        updateTransactionResponseMapper.toNotFoundDto(notFound);
                                 case UpdateTransactionUseCase.Result.Error error ->
-                                        throw new RuntimeException("Error updating transaction: " + error.error());
+                                        updateTransactionResponseMapper.toErrorDto(error);
                             };
+                            return objectMapper.writeValueAsString(responseDto);
                         } catch (Exception e) {
                             throw new RuntimeException("Error serializing result", e);
                         }
@@ -199,12 +226,17 @@ public class PortfolioMcpServer {
                 .flatMap(trxId -> deleteTransactionUseCase.execute(trxId))
                 .map(result -> {
                     try {
-                        return switch (result) {
-                            case DeleteTransactionUseCase.Result.Success success -> objectMapper.writeValueAsString(success.id());
-                            case DeleteTransactionUseCase.Result.NotFound notFound -> objectMapper.writeValueAsString(notFound.id());
-                            case DeleteTransactionUseCase.Result.PublishError publishError -> objectMapper.writeValueAsString(publishError.id());
-                            case DeleteTransactionUseCase.Result.Error error -> throw new RuntimeException("Error deleting transaction: " + error.error());
+                        DeleteTransactionResponseDto responseDto = switch (result) {
+                            case DeleteTransactionUseCase.Result.Success success ->
+                                    deleteTransactionResponseMapper.toSuccessDto(success);
+                            case DeleteTransactionUseCase.Result.NotFound notFound ->
+                                    deleteTransactionResponseMapper.toNotFoundDto(notFound);
+                            case DeleteTransactionUseCase.Result.PublishError publishError ->
+                                    deleteTransactionResponseMapper.toPublishErrorDto(publishError);
+                            case DeleteTransactionUseCase.Result.Error error ->
+                                    deleteTransactionResponseMapper.toErrorDto(error);
                         };
+                        return objectMapper.writeValueAsString(responseDto);
                     } catch (Exception e) {
                         throw new RuntimeException("Error serializing result", e);
                     }
@@ -215,11 +247,18 @@ public class PortfolioMcpServer {
 
     @Tool(description = "Get all transactions for a specific ticker.")
     public Uni<String> getTransactionsByTicker(@ToolArg(description = "Stock ticker symbol") String ticker) {
-        return getTransactionUseCase.getByTicker(ticker)
-                .collect().asList()
-                .map(transactions -> {
+        return getTransactionByTickerUseCase.getByTicker(ticker)
+                .map(result -> {
                     try {
-                        return objectMapper.writeValueAsString(transactions);
+                        GetTransactionsByTickerResponseDto responseDto = switch (result) {
+                            case GetTransactionByTickerUseCase.Result.Success success ->
+                                    getTransactionsByTickerResponseMapper.toSuccessDto(success);
+                            case GetTransactionByTickerUseCase.Result.NotFound notFound ->
+                                    getTransactionsByTickerResponseMapper.toNotFoundDto(notFound);
+                            case GetTransactionByTickerUseCase.Result.Error error ->
+                                    getTransactionsByTickerResponseMapper.toErrorDto(error);
+                        };
+                        return objectMapper.writeValueAsString(responseDto);
                     } catch (Exception e) {
                         throw new RuntimeException("Error serializing result", e);
                     }
@@ -244,7 +283,8 @@ public class PortfolioMcpServer {
                     .collect().asList()
                     .map(transactions -> {
                         try {
-                            return objectMapper.writeValueAsString(transactions);
+                            SearchTransactionsResponseDto.Success responseDto = searchTransactionsResponseMapper.toSuccessDto(transactions);
+                            return objectMapper.writeValueAsString(responseDto);
                         } catch (Exception e) {
                             throw new RuntimeException("Error serializing result", e);
                         }

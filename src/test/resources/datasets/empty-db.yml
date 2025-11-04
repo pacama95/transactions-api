@@ -1,0 +1,5 @@
+# Empty dataset to ensure clean database state
+# Use this with @DataSet(value = "datasets/empty-db.yml", cleanBefore = true)
+# to start with a completely empty database
+
+transactions: []

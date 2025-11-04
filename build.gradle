@@ -62,6 +62,23 @@ dependencies {
 
     // Kafka test
     testImplementation 'io.quarkus:quarkus-test-kafka-companion'
+
+    // Integration test dependencies
+    // Testcontainers for PostgreSQL and Redis
+    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:postgresql:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testImplementation 'com.redis.testcontainers:testcontainers-redis:2.0.1'
+
+    // DbRider for database state management
+    testImplementation 'com.github.database-rider:rider-junit5:1.41.0'
+    testImplementation 'com.github.database-rider:rider-core:1.41.0'
+
+    // JSON Path for assertions
+    testImplementation 'com.jayway.jsonpath:json-path:2.8.0'
+
+    // Awaitility for async verification
+    testImplementation 'org.awaitility:awaitility:4.2.0'
 }
 
 group 'com.transaction'

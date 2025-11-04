@@ -1,0 +1,72 @@
+transactions:
+  - id: "123e4567-e89b-12d3-a456-426614174000"
+    ticker: "AAPL"
+    transaction_type: "BUY"
+    quantity: 10.000000
+    cost_per_share: 150.2500
+    currency: "USD"
+    transaction_date: "2024-01-15"
+    commission: 5.0000
+    commission_currency: "USD"
+    drip_confirmed: false
+    is_fractional: false
+    fractional_multiplier: 1.00000000
+    notes: "Test transaction 1"
+    exchange: "NASDAQ"
+    country: "US"
+    created_at: "2024-01-15 10:00:00+00"
+    updated_at: "2024-01-15 10:00:00+00"
+
+  - id: "223e4567-e89b-12d3-a456-426614174001"
+    ticker: "GOOGL"
+    transaction_type: "BUY"
+    quantity: 5.000000
+    cost_per_share: 2800.7500
+    currency: "USD"
+    transaction_date: "2024-02-20"
+    commission: 7.5000
+    commission_currency: "USD"
+    drip_confirmed: false
+    is_fractional: false
+    fractional_multiplier: 1.00000000
+    notes: "Test transaction 2"
+    exchange: "NASDAQ"
+    country: "US"
+    created_at: "2024-02-20 14:30:00+00"
+    updated_at: "2024-02-20 14:30:00+00"
+
+  - id: "323e4567-e89b-12d3-a456-426614174002"
+    ticker: "MSFT"
+    transaction_type: "SELL"
+    quantity: 20.000000
+    cost_per_share: 380.5000
+    currency: "USD"
+    transaction_date: "2024-03-10"
+    commission: 10.0000
+    commission_currency: "USD"
+    drip_confirmed: false
+    is_fractional: false
+    fractional_multiplier: 1.00000000
+    notes: "Test transaction 3"
+    exchange: "NASDAQ"
+    country: "US"
+    created_at: "2024-03-10 09:15:00+00"
+    updated_at: "2024-03-10 09:15:00+00"
+
+  - id: "423e4567-e89b-12d3-a456-426614174003"
+    ticker: "TSLA"
+    transaction_type: "BUY"
+    quantity: 15.500000
+    cost_per_share: 245.7500
+    currency: "USD"
+    transaction_date: "2024-04-05"
+    commission: 8.2500
+    commission_currency: "USD"
+    drip_confirmed: false
+    is_fractional: true
+    fractional_multiplier: 1.00000000
+    notes: "Fractional share purchase"
+    exchange: "NASDAQ"
+    country: "US"
+    created_at: "2024-04-05 11:45:00+00"
+    updated_at: "2024-04-05 11:45:00+00"

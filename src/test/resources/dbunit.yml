@@ -1,0 +1,29 @@
+# DbRider configuration
+
+# Connection configuration
+connectionConfig:
+  driver: "org.postgresql.Driver"
+
+# Dataset configuration
+dataSetConfig:
+  # Use CLEAN_INSERT to clean tables before inserting data
+  strategy: CLEAN_INSERT
+  # Use YAML format for datasets
+  format: YML
+  # Case sensitivity
+  caseSensitiveTableNames: false
+  # Disable constraints during dataset loading
+  disableConstraints: true
+  # Use batched statements for better performance
+  batchedStatements: true
+  # Transaction mode
+  useSequenceFiltering: false
+
+# Properties
+properties:
+  # Escaping table/column names
+  escapePattern: ""
+  # Data type configuration
+  datatypeFactory: org.dbunit.ext.postgresql.PostgresqlDataTypeFactory
+  # Metadata handler
+  metadataHandler: org.dbunit.database.DefaultMetadataHandler

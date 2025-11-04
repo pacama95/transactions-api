@@ -1,0 +1,90 @@
+transactions:
+  - id: "523e4567-e89b-12d3-a456-426614174004"
+    ticker: "AAPL"
+    transaction_type: "BUY"
+    quantity: 100.000000
+    cost_per_share: 145.5000
+    currency: "USD"
+    transaction_date: "2024-01-05"
+    commission: 9.9900
+    commission_currency: "USD"
+    drip_confirmed: false
+    is_fractional: false
+    fractional_multiplier: 1.00000000
+    notes: "AAPL purchase 1"
+    exchange: "NASDAQ"
+    country: "US"
+    created_at: "2024-01-05 09:00:00+00"
+    updated_at: "2024-01-05 09:00:00+00"
+
+  - id: "623e4567-e89b-12d3-a456-426614174005"
+    ticker: "AAPL"
+    transaction_type: "BUY"
+    quantity: 50.000000
+    cost_per_share: 150.2500
+    currency: "USD"
+    transaction_date: "2024-02-10"
+    commission: 5.0000
+    commission_currency: "USD"
+    drip_confirmed: false
+    is_fractional: false
+    fractional_multiplier: 1.00000000
+    notes: "AAPL purchase 2"
+    exchange: "NASDAQ"
+    country: "US"
+    created_at: "2024-02-10 10:30:00+00"
+    updated_at: "2024-02-10 10:30:00+00"
+
+  - id: "723e4567-e89b-12d3-a456-426614174006"
+    ticker: "AAPL"
+    transaction_type: "SELL"
+    quantity: 25.000000
+    cost_per_share: 155.7500
+    currency: "USD"
+    transaction_date: "2024-03-15"
+    commission: 4.9900
+    commission_currency: "USD"
+    drip_confirmed: false
+    is_fractional: false
+    fractional_multiplier: 1.00000000
+    notes: "AAPL sale"
+    exchange: "NASDAQ"
+    country: "US"
+    created_at: "2024-03-15 14:20:00+00"
+    updated_at: "2024-03-15 14:20:00+00"
+
+  - id: "823e4567-e89b-12d3-a456-426614174007"
+    ticker: "AAPL"
+    transaction_type: "DIVIDEND"
+    quantity: 1.000000
+    cost_per_share: 0.2400
+    currency: "USD"
+    transaction_date: "2024-04-01"
+    commission: 0.0000
+    commission_currency: "USD"
+    drip_confirmed: false
+    is_fractional: false
+    fractional_multiplier: 1.00000000
+    notes: "AAPL dividend"
+    exchange: "NASDAQ"
+    country: "US"
+    created_at: "2024-04-01 08:00:00+00"
+    updated_at: "2024-04-01 08:00:00+00"
+
+  - id: "923e4567-e89b-12d3-a456-426614174008"
+    ticker: "GOOGL"
+    transaction_type: "BUY"
+    quantity: 10.000000
+    cost_per_share: 2750.0000
+    currency: "USD"
+    transaction_date: "2024-01-20"
+    commission: 12.5000
+    commission_currency: "USD"
+    drip_confirmed: false
+    is_fractional: false
+    fractional_multiplier: 1.00000000
+    notes: "GOOGL purchase"
+    exchange: "NASDAQ"
+    country: "US"
+    created_at: "2024-01-20 11:00:00+00"
+    updated_at: "2024-01-20 11:00:00+00"

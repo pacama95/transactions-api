@@ -32,13 +32,29 @@ public class TransactionPanacheRepository implements PanacheRepository<Transacti
     }
 
     @WithSession
+    public Uni<List<TransactionEntity>> findByTicker(String ticker, Integer limit) {
+        if (limit == null || limit <= 0) {
+            return findByTicker(ticker);
+        }
+        return find("ticker = ?1 ORDER BY transactionDate DESC", ticker)
+                .page(0, limit)
+                .list();
+    }
+
+    @WithSession
     public Uni<List<TransactionEntity>> findAllOrderedByDate() {
         return find("ORDER BY transactionDate DESC").list();
     }
 
     @WithSession
-    public Uni<List<TransactionEntity>> searchTransactions(String ticker, TransactionType type, 
+    public Uni<List<TransactionEntity>> searchTransactions(String ticker, TransactionType type,
                                                           LocalDate fromDate, LocalDate toDate) {
+        return searchTransactions(ticker, type, fromDate, toDate, null);
+    }
+
+    @WithSession
+    public Uni<List<TransactionEntity>> searchTransactions(String ticker, TransactionType type,
+                                                          LocalDate fromDate, LocalDate toDate, Integer limit) {
         StringBuilder query = new StringBuilder("1=1");
         Map<String, Object> params = new HashMap<>();
 
@@ -64,7 +80,13 @@ public class TransactionPanacheRepository implements PanacheRepository<Transacti
 
         query.append(" ORDER BY transactionDate DESC");
 
-        return find(query.toString(), params).list();
+        var panacheQuery = find(query.toString(), params);
+
+        if (limit != null && limit > 0) {
+            return panacheQuery.page(0, limit).list();
+        }
+
+        return panacheQuery.list();
     }
 
     @WithSession

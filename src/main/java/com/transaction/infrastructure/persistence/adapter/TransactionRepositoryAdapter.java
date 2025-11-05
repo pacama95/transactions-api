@@ -54,6 +54,15 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     }
 
     @Override
+    public Uni<List<Transaction>> findByTicker(String ticker, Integer limit) {
+        return panacheRepository.findByTicker(ticker, limit)
+                .map(entities -> entities.stream()
+                        .map(transactionEntityMapper::toDomain)
+                        .toList())
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransactionsErrors.PERSISTENCE_ERROR, throwable));
+    }
+
+    @Override
     public Uni<List<Transaction>> findAll() {
         return panacheRepository.findAllOrderedByDate()
                 .map(entities -> entities.stream()
@@ -68,6 +77,19 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                                                      LocalDate fromDate,
                                                      LocalDate toDate) {
         return panacheRepository.searchTransactions(ticker, type, fromDate, toDate)
+                .map(entities -> entities.stream()
+                        .map(transactionEntityMapper::toDomain)
+                        .toList())
+                .onFailure().transform(throwable -> new ServiceException(Errors.GetTransactionsErrors.PERSISTENCE_ERROR, throwable));
+    }
+
+    @Override
+    public Uni<List<Transaction>> searchTransactions(String ticker,
+                                                     TransactionType type,
+                                                     LocalDate fromDate,
+                                                     LocalDate toDate,
+                                                     Integer limit) {
+        return panacheRepository.searchTransactions(ticker, type, fromDate, toDate, limit)
                 .map(entities -> entities.stream()
                         .map(transactionEntityMapper::toDomain)
                         .toList())

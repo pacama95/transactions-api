@@ -28,4 +28,18 @@ public class GetTransactionsByTickerService implements GetTransactionByTickerUse
                 })
                 .onFailure().recoverWithItem(Result.Error::new);
     }
+
+    /**
+     * Gets all transactions for a specific ticker with limit
+     */
+    public Uni<Result> getByTicker(String ticker, Integer limit) {
+        return transactionRepository.findByTicker(ticker, limit)
+                .onItem().transform(transactions -> {
+                    if (transactions.isEmpty()) {
+                        return (Result) new Result.NotFound();
+                    }
+                    return new Result.Success(transactions);
+                })
+                .onFailure().recoverWithItem(Result.Error::new);
+    }
 } 

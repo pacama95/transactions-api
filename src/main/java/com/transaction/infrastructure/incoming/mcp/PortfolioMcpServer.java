@@ -249,20 +249,12 @@ public class PortfolioMcpServer {
     public Uni<String> getTransactionsByTicker(
             @ToolArg(description = "Stock ticker symbol") String ticker,
             @ToolArg(description = "Maximum number of transactions to return. If not specified, returns all transactions. Returns the most recent transactions when limit is applied.", required = false) Integer limit) {
-        return getTransactionByTickerUseCase.getByTicker(ticker)
+        return getTransactionByTickerUseCase.getByTicker(ticker, limit)
                 .map(result -> {
                     try {
                         GetTransactionsByTickerResponseDto responseDto = switch (result) {
-                            case GetTransactionByTickerUseCase.Result.Success success -> {
-                                // Apply limit if specified
-                                var transactions = success.transactions();
-                                if (limit != null && limit > 0 && transactions.size() > limit) {
-                                    // Get the last 'limit' transactions
-                                    transactions = transactions.subList(Math.max(0, transactions.size() - limit), transactions.size());
-                                }
-                                yield getTransactionsByTickerResponseMapper.toSuccessDto(
-                                        new GetTransactionByTickerUseCase.Result.Success(transactions));
-                            }
+                            case GetTransactionByTickerUseCase.Result.Success success ->
+                                    getTransactionsByTickerResponseMapper.toSuccessDto(success);
                             case GetTransactionByTickerUseCase.Result.NotFound notFound ->
                                     getTransactionsByTickerResponseMapper.toNotFoundDto(notFound);
                             case GetTransactionByTickerUseCase.Result.Error error ->
@@ -290,17 +282,11 @@ public class PortfolioMcpServer {
             LocalDate convertedEndDate = (LocalDate) parameterConversionService.convert(endDate, "endDate");
             TransactionType convertedType = (TransactionType) parameterConversionService.convert(type, "type");
 
-            return getTransactionUseCase.searchTransactions(ticker, convertedType, convertedStartDate, convertedEndDate)
+            return getTransactionUseCase.searchTransactions(ticker, convertedType, convertedStartDate, convertedEndDate, limit)
                     .collect().asList()
                     .map(transactions -> {
                         try {
-                            // Apply limit if specified
-                            var limitedTransactions = transactions;
-                            if (limit != null && limit > 0 && transactions.size() > limit) {
-                                // Get the last 'limit' transactions
-                                limitedTransactions = transactions.subList(Math.max(0, transactions.size() - limit), transactions.size());
-                            }
-                            SearchTransactionsResponseDto.Success responseDto = searchTransactionsResponseMapper.toSuccessDto(limitedTransactions);
+                            SearchTransactionsResponseDto.Success responseDto = searchTransactionsResponseMapper.toSuccessDto(transactions);
                             return objectMapper.writeValueAsString(responseDto);
                         } catch (Exception e) {
                             throw new RuntimeException("Error serializing result", e);

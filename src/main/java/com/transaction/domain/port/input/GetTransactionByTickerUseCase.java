@@ -9,6 +9,8 @@ public interface GetTransactionByTickerUseCase {
 
     Uni<Result> getByTicker(String ticker);
 
+    Uni<Result> getByTicker(String ticker, Integer limit);
+
     sealed interface Result {
         record Success(List<Transaction> transactions) implements Result {
         }

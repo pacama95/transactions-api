@@ -29,6 +29,11 @@ public interface TransactionRepository {
     Uni<List<Transaction>> findByTicker(String ticker);
 
     /**
+     * Finds all transactions for a specific ticker with limit
+     */
+    Uni<List<Transaction>> findByTicker(String ticker, Integer limit);
+
+    /**
      * Finds all transactions (active and inactive)
      */
     Uni<List<Transaction>> findAll();
@@ -38,6 +43,12 @@ public interface TransactionRepository {
      */
     Uni<List<Transaction>> searchTransactions(String ticker, TransactionType type,
                                               LocalDate fromDate, LocalDate toDate);
+
+    /**
+     * Searches transactions by criteria with limit
+     */
+    Uni<List<Transaction>> searchTransactions(String ticker, TransactionType type,
+                                              LocalDate fromDate, LocalDate toDate, Integer limit);
 
     /**
      * Updates an existing transaction

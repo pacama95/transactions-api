@@ -39,6 +39,15 @@ public class GetTransactionUseCase {
     }
 
     /**
+     * Gets all transactions for a specific ticker with limit
+     */
+    public Multi<Transaction> getByTicker(String ticker, Integer limit) {
+        return transactionRepository.findByTicker(ticker, limit)
+                .onItem()
+                .transformToMulti(list -> Multi.createFrom().iterable(list));
+    }
+
+    /**
      * Gets all transactions (active and inactive)
      */
     public Multi<Transaction> getAll() {
@@ -53,6 +62,16 @@ public class GetTransactionUseCase {
     public Multi<Transaction> searchTransactions(String ticker, TransactionType type,
                                                  LocalDate fromDate, LocalDate toDate) {
         return transactionRepository.searchTransactions(ticker, type, fromDate, toDate)
+                .onItem()
+                .transformToMulti(list -> Multi.createFrom().iterable(list));
+    }
+
+    /**
+     * Searches transactions by criteria with limit
+     */
+    public Multi<Transaction> searchTransactions(String ticker, TransactionType type,
+                                                 LocalDate fromDate, LocalDate toDate, Integer limit) {
+        return transactionRepository.searchTransactions(ticker, type, fromDate, toDate, limit)
                 .onItem()
                 .transformToMulti(list -> Multi.createFrom().iterable(list));
     }

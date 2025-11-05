@@ -246,13 +246,23 @@ public class PortfolioMcpServer {
     }
 
     @Tool(description = "Get all transactions for a specific ticker.")
-    public Uni<String> getTransactionsByTicker(@ToolArg(description = "Stock ticker symbol") String ticker) {
+    public Uni<String> getTransactionsByTicker(
+            @ToolArg(description = "Stock ticker symbol") String ticker,
+            @ToolArg(description = "Maximum number of transactions to return. If not specified, returns all transactions. Returns the most recent transactions when limit is applied.", required = false) Integer limit) {
         return getTransactionByTickerUseCase.getByTicker(ticker)
                 .map(result -> {
                     try {
                         GetTransactionsByTickerResponseDto responseDto = switch (result) {
-                            case GetTransactionByTickerUseCase.Result.Success success ->
-                                    getTransactionsByTickerResponseMapper.toSuccessDto(success);
+                            case GetTransactionByTickerUseCase.Result.Success success -> {
+                                // Apply limit if specified
+                                var transactions = success.transactions();
+                                if (limit != null && limit > 0 && transactions.size() > limit) {
+                                    // Get the last 'limit' transactions
+                                    transactions = transactions.subList(Math.max(0, transactions.size() - limit), transactions.size());
+                                }
+                                yield getTransactionsByTickerResponseMapper.toSuccessDto(
+                                        new GetTransactionByTickerUseCase.Result.Success(transactions));
+                            }
                             case GetTransactionByTickerUseCase.Result.NotFound notFound ->
                                     getTransactionsByTickerResponseMapper.toNotFoundDto(notFound);
                             case GetTransactionByTickerUseCase.Result.Error error ->
@@ -272,7 +282,8 @@ public class PortfolioMcpServer {
             @ToolArg(description = "Stock ticker symbol", required = false) String ticker,
             @ToolArg(description = "Start date (YYYY-MM-DD)", required = false) Object startDate,
             @ToolArg(description = "End date (YYYY-MM-DD)", required = false) Object endDate,
-            @ToolArg(description = "Transaction type", required = false) Object type) {
+            @ToolArg(description = "Transaction type", required = false) Object type,
+            @ToolArg(description = "Maximum number of transactions to return. If not specified, returns all transactions. Returns the most recent transactions when limit is applied.", required = false) Integer limit) {
 
         try {
             LocalDate convertedStartDate = (LocalDate) parameterConversionService.convert(startDate, "startDate");
@@ -283,7 +294,13 @@ public class PortfolioMcpServer {
                     .collect().asList()
                     .map(transactions -> {
                         try {
-                            SearchTransactionsResponseDto.Success responseDto = searchTransactionsResponseMapper.toSuccessDto(transactions);
+                            // Apply limit if specified
+                            var limitedTransactions = transactions;
+                            if (limit != null && limit > 0 && transactions.size() > limit) {
+                                // Get the last 'limit' transactions
+                                limitedTransactions = transactions.subList(Math.max(0, transactions.size() - limit), transactions.size());
+                            }
+                            SearchTransactionsResponseDto.Success responseDto = searchTransactionsResponseMapper.toSuccessDto(limitedTransactions);
                             return objectMapper.writeValueAsString(responseDto);
                         } catch (Exception e) {
                             throw new RuntimeException("Error serializing result", e);

@@ -45,7 +45,8 @@ class TransactionEntityMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NYSE",
-                "USA"
+                "USA",
+                "Apple Inc."
         );
 
         TransactionEntity entity = mapper.toEntity(transaction);
@@ -67,6 +68,7 @@ class TransactionEntityMapperTest {
     @Test
     void testToEntityWithNulls() {
         Transaction transaction = new Transaction(
+                null,
                 null,
                 null,
                 null,
@@ -158,7 +160,7 @@ class TransactionEntityMapperTest {
         Transaction transaction1 = Transaction.create(
                 id1, "TSLA", TransactionType.BUY, new BigDecimal("5.0"), new BigDecimal("250.0"),
                 new BigDecimal("1.0"), Currency.EUR, LocalDate.of(2024, 3, 1), "Buy Tesla",
-                true, true, new BigDecimal("2.0"), Currency.GBP, "LSE", "UK"
+                true, true, new BigDecimal("2.0"), Currency.GBP, "LSE", "UK", "Tesla Inc."
         );
         TransactionEntity expectedEntity1 = new TransactionEntity();
         expectedEntity1.setId(id1);
@@ -178,7 +180,7 @@ class TransactionEntityMapperTest {
         Transaction transaction2 = Transaction.create(
                 id2, "GOOGL", TransactionType.SELL, new BigDecimal("1.5"), new BigDecimal("3000.0"),
                 new BigDecimal("15.0"), Currency.USD, LocalDate.of(2024, 4, 15), "Sell Google",
-                true, false, BigDecimal.ONE, null, "NASDAQ", "USA"
+                true, false, BigDecimal.ONE, null, "NASDAQ", "USA", "Alphabet Inc."
         );
         TransactionEntity expectedEntity2 = new TransactionEntity();
         expectedEntity2.setId(id2);

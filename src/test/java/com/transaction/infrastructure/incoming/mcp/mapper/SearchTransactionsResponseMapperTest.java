@@ -49,7 +49,7 @@ class SearchTransactionsResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         Transaction transaction2 = Transaction.create(
@@ -67,7 +67,7 @@ class SearchTransactionsResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         Transaction transaction3 = Transaction.create(
@@ -85,7 +85,7 @@ class SearchTransactionsResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         List<Transaction> transactions = List.of(transaction1, transaction2, transaction3);
@@ -127,7 +127,7 @@ class SearchTransactionsResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         Transaction transaction2 = Transaction.create(
@@ -145,7 +145,7 @@ class SearchTransactionsResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         List<Transaction> transactions = List.of(transaction1, transaction2);

@@ -47,7 +47,8 @@ class TransactionMessageMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA",
+                "Apple Inc."
         );
 
         TransactionCreatedEvent event = new TransactionCreatedEvent(tx);
@@ -96,7 +97,8 @@ class TransactionMessageMapperTest {
                 new BigDecimal("0.5000"),
                 Currency.GBP,
                 "LSE",
-                "UK"
+                "UK",
+                "Microsoft Corporation"
         );
 
         // apply an update to generate an updated event's data state
@@ -113,7 +115,8 @@ class TransactionMessageMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA",
+                "Microsoft Corporation"
         );
 
         // Get the event that was generated (index 1 because Transaction.create adds a TransactionCreatedEvent first)
@@ -189,7 +192,8 @@ class TransactionMessageMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA",
+                "Tesla Inc."
         );
 
         TransactionDeletedEvent event = new TransactionDeletedEvent(tx);

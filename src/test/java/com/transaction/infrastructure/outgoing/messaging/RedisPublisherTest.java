@@ -250,7 +250,8 @@ class RedisPublisherTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NYSE",
-                "USA"
+                "USA",
+                "Apple Inc."
         );
     }
 
@@ -269,7 +270,8 @@ class RedisPublisherTest {
                 transaction.getFractionalMultiplier(),
                 transaction.getCommissionCurrency(),
                 transaction.getExchange(),
-                transaction.getCountry()
+                transaction.getCountry(),
+                transaction.getCompanyName()
         );
 
         return new Message<>(
@@ -296,7 +298,8 @@ class RedisPublisherTest {
                 previousTransaction.getFractionalMultiplier(),
                 previousTransaction.getCommissionCurrency(),
                 previousTransaction.getExchange(),
-                previousTransaction.getCountry()
+                previousTransaction.getCountry(),
+                previousTransaction.getCompanyName()
         );
 
         TransactionUpdatedData.TransactionSnapshot newSnapshot = new TransactionUpdatedData.TransactionSnapshot(
@@ -313,7 +316,8 @@ class RedisPublisherTest {
                 newTransaction.getFractionalMultiplier(),
                 newTransaction.getCommissionCurrency(),
                 newTransaction.getExchange(),
-                newTransaction.getCountry()
+                newTransaction.getCountry(),
+                newTransaction.getCompanyName()
         );
 
         TransactionUpdatedData payload = new TransactionUpdatedData(previousSnapshot, newSnapshot);
@@ -342,7 +346,8 @@ class RedisPublisherTest {
                 transaction.getFractionalMultiplier(),
                 transaction.getCommissionCurrency(),
                 transaction.getExchange(),
-                transaction.getCountry()
+                transaction.getCountry(),
+                transaction.getCompanyName()
         );
 
         return new Message<>(

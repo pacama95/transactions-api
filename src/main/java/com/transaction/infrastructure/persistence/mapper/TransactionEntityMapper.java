@@ -13,12 +13,14 @@ public interface TransactionEntityMapper {
     @Mapping(target = "commission", source = "fees")
     @Mapping(target = "exchange", source = "exchange")
     @Mapping(target = "country", source = "country")
+    @Mapping(target = "companyName", source = "companyName")
     TransactionEntity toEntity(Transaction transaction);
 
     @Mapping(target = "price", source = "costPerShare")
     @Mapping(target = "fees", source = "commission")
     @Mapping(target = "exchange", source = "exchange")
     @Mapping(target = "country", source = "country")
+    @Mapping(target = "companyName", source = "companyName")
     Transaction toDomain(TransactionEntity entity);
 
     default Transaction createTransaction(TransactionEntity transactionEntity) {
@@ -37,7 +39,8 @@ public interface TransactionEntityMapper {
                 transactionEntity.getFractionalMultiplier(),
                 transactionEntity.getCommissionCurrency(),
                 transactionEntity.getExchange(),
-                transactionEntity.getCountry()
+                transactionEntity.getCountry(),
+                transactionEntity.getCompanyName()
         );
     }
 } 

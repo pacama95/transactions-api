@@ -36,7 +36,8 @@ public record TransactionUpdatedData(
             BigDecimal fractionalMultiplier,
             Currency commissionCurrency,
             String exchange,
-            String country
+            String country,
+            String companyName
     ) {
     }
 }

@@ -20,7 +20,8 @@ public record CreateTransactionCommand(
         BigDecimal fractionalMultiplier,
         Currency commissionCurrency,
         String exchange,
-        String country
+        String country,
+        String companyName
 ) {
 
     public Transaction toTransaction() {
@@ -38,7 +39,8 @@ public record CreateTransactionCommand(
                 fractionalMultiplier,
                 commissionCurrency,
                 exchange,
-                country
+                country,
+                companyName
         );
     }
 }

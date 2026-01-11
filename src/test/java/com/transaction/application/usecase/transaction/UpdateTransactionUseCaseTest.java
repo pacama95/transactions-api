@@ -117,6 +117,7 @@ class UpdateTransactionUseCaseTest {
                 "GOOGL",
                 null, null, null, null, null, null, null, null, null, null,
                 null,
+                null,
                 null
         );
 
@@ -326,7 +327,8 @@ class UpdateTransactionUseCaseTest {
                 fractionalMultiplierValue,
                 fractionalMultiplierCurrency,
                 exchange,
-                country
+                country,
+                "Test Company"
         );
     }
 
@@ -347,6 +349,7 @@ class UpdateTransactionUseCaseTest {
                 Currency.USD,
                 "NYSE",
                 "USA",
+                "Apple Inc.",
                 new java.util.ArrayList<>()
         );
     }
@@ -366,7 +369,8 @@ class UpdateTransactionUseCaseTest {
                 new BigDecimal("0.5"),
                 Currency.GBP,
                 "NASDAQ",
-                "USA"
+                "USA",
+                "Microsoft Corporation"
         );
     }
 }

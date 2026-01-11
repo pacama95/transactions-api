@@ -24,7 +24,8 @@ public class TransactionDtoTestHelper {
                 transaction.getFractionalMultiplier(),
                 transaction.getCommissionCurrency(),
                 transaction.getExchange(),
-                transaction.getCountry()
+                transaction.getCountry(),
+                transaction.getCompanyName()
         );
     }
 }

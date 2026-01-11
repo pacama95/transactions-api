@@ -83,7 +83,8 @@ public class PortfolioMcpServer {
             @ToolArg(description = "Transaction date (YYYY-MM-DD)", defaultValue = "TODAY") Object date,
             @ToolArg(description = "Transaction notes", required = false) String notes,
             @ToolArg(description = "Stock exchange") String exchange,
-            @ToolArg(description = "Country of the stock") String country) {
+            @ToolArg(description = "Country of the stock") String country,
+            @ToolArg(description = "Company legal name") String companyName) {
 
         try {
             TransactionType convertedType = (TransactionType) parameterConversionService.convert(type, "type");
@@ -108,7 +109,8 @@ public class PortfolioMcpServer {
                     convertedFractionalMultiplier,
                     convertedCommissionCurrency,
                     exchange,
-                    country
+                    country,
+                    companyName
             );
 
             return createTransactionUseCase.execute(command)
@@ -165,7 +167,8 @@ public class PortfolioMcpServer {
             @ToolArg(description = "Transaction date (YYYY-MM-DD)", required = false, defaultValue = "TODAY") Object date,
             @ToolArg(description = "Transaction notes", required = false) String notes,
             @ToolArg(description = "Stock exchange", required = false) String exchange,
-            @ToolArg(description = "Country of the stock", required = false) String country) {
+            @ToolArg(description = "Country of the stock", required = false) String country,
+            @ToolArg(description = "Company legal name", required = false) String companyName) {
 
         try {
             return Uni.createFrom().item(() -> {
@@ -192,7 +195,8 @@ public class PortfolioMcpServer {
                                         convertedFractionalMultiplier,
                                         convertedCommissionCurrency,
                                         exchange,
-                                        country);
+                                        country,
+                                        companyName);
                             }
                     )
                     .flatMap(updateTransactionCommand -> updateTransactionUseCase.execute(updateTransactionCommand))

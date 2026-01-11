@@ -64,7 +64,11 @@ public record CreateTransactionRequest(
         @NotNull(message = "Country is required")
         @Size(min = 2, max = 50, message = "Country must be between 2 and 50 characters")
         @Schema(description = "Country of the stock", example = "USA", required = true)
-        String country
+        String country,
+        @NotNull(message = "Company name is required")
+        @Size(min = 1, max = 255, message = "Company name must be between 1 and 255 characters")
+        @Schema(description = "Company legal name", example = "Apple Inc.", required = true)
+        String companyName
 ) {
 
     public CreateTransactionRequest {

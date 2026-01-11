@@ -50,7 +50,7 @@ class GetTransactionsByTickerResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         Transaction transaction2 = Transaction.create(
@@ -68,7 +68,7 @@ class GetTransactionsByTickerResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         List<Transaction> transactions = List.of(transaction1, transaction2);
@@ -107,7 +107,7 @@ class GetTransactionsByTickerResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         when(transactionMapper.toDto(transaction)).thenReturn(TransactionDtoTestHelper.createTransactionDto(transaction));

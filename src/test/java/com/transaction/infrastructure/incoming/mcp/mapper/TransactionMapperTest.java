@@ -42,7 +42,8 @@ class TransactionMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA",
+                "Apple Inc."
         );
 
         // When
@@ -65,6 +66,7 @@ class TransactionMapperTest {
         assertEquals(Currency.USD, dto.commissionCurrency());
         assertEquals("NASDAQ", dto.exchange());
         assertEquals("USA", dto.country());
+        assertEquals("Apple Inc.", dto.companyName());
     }
 }
 

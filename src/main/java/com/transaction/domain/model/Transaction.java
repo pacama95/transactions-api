@@ -29,6 +29,7 @@ public class Transaction {
     private Currency commissionCurrency;
     private String exchange;
     private String country;
+    private String companyName;
     private final List<DomainEvent<?>> domainEvents;
 
     private Transaction(UUID id,
@@ -45,7 +46,8 @@ public class Transaction {
                         BigDecimal fractionalMultiplier,
                         Currency commissionCurrency,
                         String exchange,
-                        String country) {
+                        String country,
+                        String companyName) {
         this.id = id;
         this.ticker = ticker;
         this.transactionType = transactionType;
@@ -61,6 +63,7 @@ public class Transaction {
         this.commissionCurrency = commissionCurrency;
         this.exchange = exchange;
         this.country = country;
+        this.companyName = companyName;
         this.domainEvents = new ArrayList<>();
         this.domainEvents.add(new TransactionCreatedEvent(this));
     }
@@ -81,6 +84,7 @@ public class Transaction {
                        Currency commissionCurrency,
                        String exchange,
                        String country,
+                       String companyName,
                        List<DomainEvent<?>> domainEvents) {
         this.id = id;
         this.ticker = ticker;
@@ -97,6 +101,7 @@ public class Transaction {
         this.commissionCurrency = commissionCurrency;
         this.exchange = exchange;
         this.country = country;
+        this.companyName = companyName;
         this.domainEvents = new ArrayList<>();
     }
 
@@ -113,7 +118,8 @@ public class Transaction {
                        BigDecimal fractionalMultiplier,
                        Currency commissionCurrency,
                        String exchange,
-                       String country) {
+                       String country,
+                       String companyName) {
         this.id = null;
         this.ticker = ticker;
         this.transactionType = transactionType;
@@ -129,6 +135,7 @@ public class Transaction {
         this.commissionCurrency = commissionCurrency;
         this.exchange = exchange;
         this.country = country;
+        this.companyName = companyName;
         this.domainEvents = new ArrayList<>();
     }
 
@@ -158,7 +165,8 @@ public class Transaction {
                                      BigDecimal fractionalMultiplier,
                                      Currency commissionCurrency,
                                      String exchange,
-                                     String country) {
+                                     String country,
+                                     String companyName) {
         return new Transaction(
                 id,
                 ticker,
@@ -174,7 +182,8 @@ public class Transaction {
                 fractionalMultiplier,
                 commissionCurrency,
                 exchange,
-                country
+                country,
+                companyName
         );
     }
 
@@ -193,7 +202,8 @@ public class Transaction {
                        BigDecimal fractionalMultiplier,
                        Currency commissionCurrency,
                        String exchange,
-                       String country) {
+                       String country,
+                       String companyName) {
 
         // Capture previous state before making any changes
         Transaction previousState = createSnapshot();
@@ -211,6 +221,7 @@ public class Transaction {
         if (commissionCurrency != null) this.commissionCurrency = commissionCurrency;
         if (exchange != null) this.exchange = exchange;
         if (country != null) this.country = country;
+        if (companyName != null) this.companyName = companyName;
 
         // Create snapshot of current state after updates
         Transaction newState = createSnapshot();
@@ -238,6 +249,7 @@ public class Transaction {
                 this.commissionCurrency,
                 this.exchange,
                 this.country,
+                this.companyName,
                 new ArrayList<>() // Empty events list for snapshot
         );
     }

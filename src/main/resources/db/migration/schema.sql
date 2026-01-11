@@ -19,6 +19,9 @@ CREATE TABLE transactions (
     transaction_date DATE NOT NULL,
     commission DECIMAL(18, 4) DEFAULT 0.00,
     commission_currency currency_type,
+    exchange VARCHAR(20),
+    country VARCHAR(50),
+    company_name VARCHAR(255),
     drip_confirmed BOOLEAN DEFAULT FALSE,
     is_fractional BOOLEAN DEFAULT FALSE,
     fractional_multiplier DECIMAL(10, 8) DEFAULT 1.0, -- TODO: use this when fractional transactions are detected to adjust the input market price

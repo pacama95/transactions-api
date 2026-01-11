@@ -63,7 +63,8 @@ public class UpdateTransactionService implements UpdateTransactionUseCase {
                 command.fractionalMultiplier() != null ? command.fractionalMultiplier() : current.getFractionalMultiplier(),
                 command.commissionCurrency() != null ? command.commissionCurrency() : current.getCommissionCurrency(),
                 StringUtils.hasMeaningfulContent(command.exchange()) ? command.exchange() : current.getExchange(),
-                StringUtils.hasMeaningfulContent(command.country()) ? command.country() : current.getCountry()
+                StringUtils.hasMeaningfulContent(command.country()) ? command.country() : current.getCountry(),
+                StringUtils.hasMeaningfulContent(command.companyName()) ? command.companyName() : current.getCompanyName()
         );
 
         return transactionRepository.deleteById(current.getId())
@@ -116,6 +117,7 @@ public class UpdateTransactionService implements UpdateTransactionUseCase {
                 transaction.getCommissionCurrency(),
                 transaction.getExchange(),
                 transaction.getCountry(),
+                transaction.getCompanyName(),
                 new ArrayList<>()
         );
     }

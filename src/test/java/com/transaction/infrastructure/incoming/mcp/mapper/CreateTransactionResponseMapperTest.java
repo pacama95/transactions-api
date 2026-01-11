@@ -47,7 +47,7 @@ class CreateTransactionResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
         
         when(transactionMapper.toDto(any(Transaction.class)))
@@ -85,7 +85,7 @@ class CreateTransactionResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
         
         when(transactionMapper.toDto(any(Transaction.class)))

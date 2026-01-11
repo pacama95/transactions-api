@@ -67,6 +67,9 @@ public class TransactionEntity {
     @Column(name = "country", length = 50)
     private String country;
 
+    @Column(name = "company_name", length = 255)
+    private String companyName;
+
     @Column(name = "drip_confirmed")
     private Boolean dripConfirmed = false;
 

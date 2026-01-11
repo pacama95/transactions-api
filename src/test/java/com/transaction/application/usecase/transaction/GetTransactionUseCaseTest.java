@@ -452,7 +452,7 @@ class GetTransactionUseCaseTest {
                 BigDecimal.ONE,
                 null,
                 "NYSE",
-                "USA"
+                "USA", "Test Company"
         );
     }
 
@@ -461,7 +461,7 @@ class GetTransactionUseCaseTest {
         return Transaction.create(base.getId(), base.getTicker(), base.getTransactionType(), base.getQuantity(),
                 base.getPrice(), base.getFees(), base.getCurrency(), base.getTransactionDate(),
                 base.getNotes(), true, base.getIsFractional(), base.getFractionalMultiplier(),
-                base.getCommissionCurrency(), "NYSE", "USA");
+                base.getCommissionCurrency(), "NYSE", "USA", base.getCompanyName());
     }
 
     private Transaction createInactiveTransaction(UUID id, String ticker) {
@@ -469,7 +469,7 @@ class GetTransactionUseCaseTest {
         return Transaction.create(base.getId(), base.getTicker(), base.getTransactionType(), base.getQuantity(),
                 base.getPrice(), base.getFees(), base.getCurrency(), base.getTransactionDate(),
                 base.getNotes(), false, base.getIsFractional(), base.getFractionalMultiplier(),
-                base.getCommissionCurrency(), "NYSE", "USA");
+                base.getCommissionCurrency(), "NYSE", "USA", base.getCompanyName());
     }
 
     private Transaction createTransactionWithType(UUID id, String ticker, TransactionType type) {
@@ -488,7 +488,7 @@ class GetTransactionUseCaseTest {
                 BigDecimal.ONE,
                 null,
                 "NYSE",
-                "USA"
+                "USA", "Test Company"
         );
     }
 }

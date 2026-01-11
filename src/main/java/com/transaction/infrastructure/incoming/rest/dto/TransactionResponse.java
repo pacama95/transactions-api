@@ -45,7 +45,9 @@ public record TransactionResponse(
         @Schema(description = "Stock exchange", example = "NYSE")
         String exchange,
         @Schema(description = "Country of the stock", example = "USA")
-        String country
+        String country,
+        @Schema(description = "Company legal name", example = "Apple Inc.")
+        String companyName
 ) {
 
     public TransactionResponse {

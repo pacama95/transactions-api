@@ -63,7 +63,8 @@ class CreateTransactionUseCaseTest {
                             inputTransaction.getFractionalMultiplier(),
                             inputTransaction.getCommissionCurrency(),
                             inputTransaction.getExchange(),
-                            inputTransaction.getCountry()
+                            inputTransaction.getCountry(),
+                            inputTransaction.getCompanyName()
                     );
                     // Return transaction with preserved mutable events
                     return Uni.createFrom().item(savedTransaction);
@@ -122,7 +123,8 @@ class CreateTransactionUseCaseTest {
                             inputTransaction.getFractionalMultiplier(),
                             inputTransaction.getCommissionCurrency(),
                             inputTransaction.getExchange(),
-                            inputTransaction.getCountry()
+                            inputTransaction.getCountry(),
+                            inputTransaction.getCompanyName()
                     );
                     return Uni.createFrom().item(savedTransaction);
                 });
@@ -196,7 +198,8 @@ class CreateTransactionUseCaseTest {
                             inputTransaction.getFractionalMultiplier(),
                             inputTransaction.getCommissionCurrency(),
                             inputTransaction.getExchange(),
-                            inputTransaction.getCountry()
+                            inputTransaction.getCountry(),
+                            inputTransaction.getCompanyName()
                     );
                     return Uni.createFrom().item(savedTransaction);
                 });
@@ -243,7 +246,8 @@ class CreateTransactionUseCaseTest {
                             inputTransaction.getFractionalMultiplier(),
                             inputTransaction.getCommissionCurrency(),
                             inputTransaction.getExchange(),
-                            inputTransaction.getCountry()
+                            inputTransaction.getCountry(),
+                            inputTransaction.getCompanyName()
                     );
                     return Uni.createFrom().item(savedTransaction);
                 });
@@ -291,7 +295,8 @@ class CreateTransactionUseCaseTest {
                 BigDecimal.ONE,
                 null,
                 "NYSE",
-                "USA"
+                "USA",
+                "Apple Inc."
         );
     }
 
@@ -309,7 +314,8 @@ class CreateTransactionUseCaseTest {
                 new BigDecimal("0.5"),
                 Currency.EUR,
                 "NASDAQ",
-                "USA"
+                "USA",
+                "Microsoft Corporation"
         );
     }
 

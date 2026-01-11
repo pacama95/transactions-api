@@ -36,7 +36,7 @@ class TransactionMapperTest {
                 new BigDecimal("1.234567"),
                 Currency.USD,
                 "NYSE",
-                "USA"
+                "USA", "Test Company"
         );
 
         TransactionResponse resp = mapper.toResponse(tx);
@@ -63,7 +63,7 @@ class TransactionMapperTest {
                 new BigDecimal("0.333333333"),
                 Currency.GBP,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         UpdateTransactionCommand command = mapper.toUpdateTransactionCommand(transactionId, req);

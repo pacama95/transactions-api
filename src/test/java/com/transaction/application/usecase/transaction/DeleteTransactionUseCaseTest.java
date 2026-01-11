@@ -184,7 +184,7 @@ class DeleteTransactionUseCaseTest {
                 BigDecimal.ONE,
                 null,
                 "NYSE",
-                "USA"
+                "USA", "Test Company"
         );
     }
 }

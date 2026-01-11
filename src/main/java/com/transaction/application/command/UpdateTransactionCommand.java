@@ -21,6 +21,7 @@ public record UpdateTransactionCommand(
         BigDecimal fractionalMultiplier,
         Currency commissionCurrency,
         String exchange,
-        String country
+        String country,
+        String companyName
 ) {
 }

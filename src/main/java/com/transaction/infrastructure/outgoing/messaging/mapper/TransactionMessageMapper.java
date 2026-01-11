@@ -53,6 +53,7 @@ public interface TransactionMessageMapper {
     @Mapping(target = "commissionCurrency", source = "data.commissionCurrency")
     @Mapping(target = "exchange", source = "data.exchange")
     @Mapping(target = "country", source = "data.country")
+    @Mapping(target = "companyName", source = "data.companyName")
     TransactionCreatedData mapToTransactionCreatedPayload(TransactionCreatedEvent transactionCreatedEvent);
 
     @org.mapstruct.Named("mapToTransactionUpdatedPayload")
@@ -74,6 +75,7 @@ public interface TransactionMessageMapper {
     @Mapping(target = "commissionCurrency", source = "commissionCurrency")
     @Mapping(target = "exchange", source = "exchange")
     @Mapping(target = "country", source = "country")
+    @Mapping(target = "companyName", source = "companyName")
     TransactionUpdatedData.TransactionSnapshot toTransactionSnapshot(com.transaction.domain.model.Transaction transaction);
 
     @org.mapstruct.Named("mapToTransactionDeletedPayload")
@@ -91,6 +93,7 @@ public interface TransactionMessageMapper {
     @Mapping(target = "commissionCurrency", source = "data.commissionCurrency")
     @Mapping(target = "exchange", source = "data.exchange")
     @Mapping(target = "country", source = "data.country")
+    @Mapping(target = "companyName", source = "data.companyName")
     TransactionDeletedData mapToTransactionDeletedPayload(TransactionDeletedEvent transactionDeletedEvent);
 
     default Instant generateMessageCreatedAt() {

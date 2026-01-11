@@ -48,7 +48,7 @@ class GetTransactionResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         // When - Don't mock toDto, call it directly
@@ -82,7 +82,7 @@ class GetTransactionResponseMapperTest {
                 BigDecimal.ONE,
                 Currency.USD,
                 "NASDAQ",
-                "USA"
+                "USA", "Test Company"
         );
 
         // When - Don't mock toDto, call it directly  

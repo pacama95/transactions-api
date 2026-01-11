@@ -10,5 +10,6 @@ public interface TransactionMapper {
     
     @Mapping(target = "transactionType", source = "transactionType")
     @Mapping(target = "transactionDate", source = "transactionDate")
+    @Mapping(target = "companyName", source = "companyName")
     TransactionDto toDto(Transaction transaction);
 }

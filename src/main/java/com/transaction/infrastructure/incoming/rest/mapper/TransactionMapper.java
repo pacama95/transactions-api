@@ -28,6 +28,7 @@ public interface TransactionMapper {
     @Mapping(target = "fractionalMultiplier", expression = "java(normalizeMonetary(transaction.getFractionalMultiplier()))")
     @Mapping(target = "exchange", source = "exchange")
     @Mapping(target = "country", source = "country")
+    @Mapping(target = "companyName", source = "companyName")
     TransactionResponse toResponse(Transaction transaction);
 
     List<TransactionResponse> toResponses(List<Transaction> transactions);
@@ -38,6 +39,7 @@ public interface TransactionMapper {
     @Mapping(target = "fractionalMultiplier", expression = "java(normalizeMonetary(createTransactionRequest.fractionalMultiplier()))")
     @Mapping(target = "exchange", source = "exchange")
     @Mapping(target = "country", source = "country")
+    @Mapping(target = "companyName", source = "companyName")
     CreateTransactionCommand toCreateTransactionCommand(CreateTransactionRequest createTransactionRequest);
 
     @Mapping(target = "quantity", expression = "java(normalizeQuantity(updateTransactionRequest.quantity()))")
@@ -46,6 +48,7 @@ public interface TransactionMapper {
     @Mapping(target = "fractionalMultiplier", expression = "java(normalizeMonetary(updateTransactionRequest.fractionalMultiplier()))")
     @Mapping(target = "exchange", source = "updateTransactionRequest.exchange")
     @Mapping(target = "country", source = "updateTransactionRequest.country")
+    @Mapping(target = "companyName", source = "updateTransactionRequest.companyName")
     UpdateTransactionCommand toUpdateTransactionCommand(UUID transactionId, UpdateTransactionRequest updateTransactionRequest);
 
     // Normalization helpers
